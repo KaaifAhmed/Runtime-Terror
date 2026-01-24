@@ -1,21 +1,31 @@
 #include <raylib.h>
-#include "ball.h"
+#include <string>
+#include "constants.h"
+#include "player.h"
 
-int main() 
-{    
-    const int screenWidth = 1280;
-    const int screenHeight = 860;
+using namespace std;
+
+int FPS = 60;
+
+int main()
+{
+    Player player;
     
-    Ball ball;
-    
-    InitWindow(screenWidth, screenHeight, "Runtime Terror");
-    SetTargetFPS(60);
-    
+    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Runtime Terror");
+    SetTargetFPS(FPS);
+
     while (!WindowShouldClose())
     {
         BeginDrawing();
+        player.Update();
+        
+
+        ClearBackground(BLACK);
+        
+        player.Draw();
+
         EndDrawing();
     }
-    
+
     CloseWindow();
 }
