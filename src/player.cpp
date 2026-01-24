@@ -21,12 +21,25 @@ void Player::Update()
 
     if (IsKeyDown(KEY_SPACE))
     {
-        y -= JUMP_HEIGHT;
+        if (!inAir)
+        {
+            isJumping = true;            
+        }
     }
     
 
     if ((y+height) < SCREEN_HEIGHT-10)
     {
         y += GRAVITY;
+        inAir = true;
+    } else {
+        inAir = false;
     }
+
+    if (isJumping)
+    {
+        y -= JUMP_HEIGHT;
+        isJumping = false;
+    }
+    
 }

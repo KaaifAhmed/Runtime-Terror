@@ -5,8 +5,6 @@
 
 using namespace std;
 
-int FPS = 60;
-
 int main()
 {
     Player player;
@@ -17,8 +15,7 @@ int main()
     while (!WindowShouldClose())
     {
         BeginDrawing();
-        player.Update();
-        
+        player.Update();        
 
         ClearBackground(BLACK);
         
