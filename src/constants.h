@@ -8,6 +8,8 @@ const int FPS = 60;
 
 const int GRAVITY = 5;
 
+const int GROUND_POS = SCREEN_HEIGHT - 10;
+
 // PLAYER CONSTANTS
 const int PLAYER_SPEED = 6;
 const int JUMP_HEIGHT = 50;

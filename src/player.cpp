@@ -11,6 +11,7 @@ void Player::Draw()
 void Player::Update()
 {
     y += y_velocity;
+    x += x_velocity;
     Fall();
     Move();    
 }
@@ -19,11 +20,11 @@ void Player::Fall()
 {
     // STOP FALLING IF ON GROUND
     // NEED TO REPLACE THIS AFTER COLLISION SETUP
-    if ((y + height) >= SCREEN_HEIGHT - 10)
+    if ((y + height) >= GROUND_POS)
     {
         inAir = false;
         y_velocity = 0;
-        y = SCREEN_HEIGHT - 10 - height;
+        y = GROUND_POS - height;
     }
 
     // FALL DOWNWARDS IF IN AIR
@@ -37,11 +38,14 @@ void Player::Move() {
     // MOVE LEFT AND RIGHT USING LEFT/RIGHT KEYS
     if (IsKeyDown(KEY_RIGHT))
     {
-        x += PLAYER_SPEED;
+        x_velocity = PLAYER_SPEED;
     }
     else if (IsKeyDown(KEY_LEFT))
     {
-        x -= PLAYER_SPEED;
+        x_velocity = -PLAYER_SPEED;
+    }
+    else {
+        x_velocity = 0;
     }
     
     // JUMP WHEN SPACE KEY PRESSED
