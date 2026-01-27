@@ -8,10 +8,10 @@
 class Tile
 {
 public:
-    int width_of_tile;
-    int x_of_tile;
-    int y_of_tile;
-    static const int HEIGTH_TILE = 20;
+    float width_of_tile;
+    float x_of_tile;
+    float y_of_tile;
+    static constexpr int HEIGTH_TILE = 50;
     static const int normal_speed = 4;
 
     Tile(int start_X); 
