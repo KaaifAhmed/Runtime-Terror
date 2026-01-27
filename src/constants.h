@@ -17,4 +17,8 @@ const int JUMP_HEIGHT = 50;
 const float PLAYER_START_X = 50;
 const float PLAYER_START_Y = 500;
 
+// Tile const
+const int HEIGTH_TILE=32;
+const int normal_speed=5;
+
 #endif
