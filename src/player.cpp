@@ -3,6 +3,8 @@
 #include "raylib.h"
 #include "constants.h"
 
+using namespace std;
+
 void Player::Draw()
 {
     DrawRectangle(x, y, width, height, color);
@@ -10,10 +12,11 @@ void Player::Draw()
 
 void Player::Update()
 {
+    Fall();
+    Move();
     y += y_velocity;
     x += x_velocity;
-    Fall();
-    Move();    
+
 }
 
 void Player::Fall()
