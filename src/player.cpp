@@ -18,7 +18,6 @@ void Player::Update()
 
 void Player::Fall()
 {
-    // hi
     // STOP FALLING IF ON GROUND
     // NEED TO REPLACE THIS AFTER COLLISION SETUP
     if ((y + height) >= GROUND_POS)
