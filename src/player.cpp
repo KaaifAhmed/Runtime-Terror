@@ -10,6 +10,16 @@ void Player::Draw()
     DrawRectangle(x, y, width, height, color);
 }
 
+void Player::Hitbox(Color c)
+{
+    // upper part (dont go on the platform)
+    DrawRectangle(x,y,width,(float)(2*height)/3,WHITE);
+
+    // lower part(go on the plat)
+     DrawRectangle(x,y+(float)(2*height)/3,width,(float)(height)/3,c);
+
+}
+
 void Player::Update()
 {
     Fall();

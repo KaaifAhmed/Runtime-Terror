@@ -14,6 +14,7 @@ public:
     bool inAir = true;
 
     void Draw();
+    void Hitbox(Color c);
     void Update();
     void Fall();
     void Move();

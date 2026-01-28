@@ -17,6 +17,7 @@ public:
     Tile(int start_X);
     void Draw();
     bool Update(); // update position returns true if offscreen
+    void Hitbox(Color c);
     static void Collision(Player &player, const std::vector<Tile *> &tiles);
     static void Cleanup(std::vector<Tile *> &tiles);
     static void Delete_And_Update(std::vector<Tile *> &tiles);

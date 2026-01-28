@@ -5,13 +5,15 @@ Tile::Tile(int startX)
 {
     width_of_tile = GetRandomValue(200, 500);
     x_of_tile = startX;
-    y_of_tile = GetRandomValue(SCREEN_HEIGHT - 32 - 40, SCREEN_HEIGHT - 32);
+    y_of_tile = GetRandomValue(SCREEN_HEIGHT - 32 , SCREEN_HEIGHT - 32-40);
 }
 
 void Tile::Draw()
 {
     DrawRectangle(x_of_tile, y_of_tile, width_of_tile, HEIGTH_TILE, WHITE);
+    
 }
+
 
 bool Tile::Update()
 {
@@ -22,21 +24,44 @@ bool Tile::Update()
 void Tile::Collision(Player &player, const std::vector<Tile *> &tiles)
 {
     bool collision = false;
+    int overlap;
+    int player_right=player.x+player.width;
+
     // checking collision
     for (Tile *t : tiles)
     {
-        // first need to convert them both to rect
-        Rectangle tileRect = {t->x_of_tile, t->y_of_tile, t->width_of_tile, Tile::HEIGTH_TILE};
-        Rectangle player_copy = {player.x, player.y, player.width, player.height};
-        if (CheckCollisionRecs(player_copy, tileRect))
+       // checking of bottom of player with top of tile
+        Rectangle tile_top = {t->x_of_tile, t->y_of_tile, t->width_of_tile,((float)t->HEIGTH_TILE)/3};
+        Rectangle player_bottom = {player.x, player.y+(float)(2*player.height)/3, player.width,player.height/3};
+
+        //check the rest of player with the entire tile
+        Rectangle player_top = {player.x,player.y,player.width,((float)2*player.height)/3};
+        Rectangle tile={t->x_of_tile,t->y_of_tile,t->width_of_tile,t->HEIGTH_TILE}; 
+        
+        if (CheckCollisionRecs(player_bottom, tile_top))
         {
             player.inAir = false; // because he is on a solid block
+
             player.y = t->y_of_tile - player.height + 1;
             player.y_velocity = 0;
             collision = true;
             break;
         }
+        else if(CheckCollisionRecs(player_top,tile))
+        {
+
+            
+            if(player_right>=tile.width)
+            {
+                overlap=player_right-tile.x; // how far it has gone inside
+                player.x=player.x-overlap+1;
+                player.inAir=true;
+                 break;
+            }
+        }
     }
+   
+    
     if (!collision)
     {
         player.inAir = true;
@@ -72,4 +97,12 @@ void Tile::New_tiles(std::vector<Tile *> &tiles)
         int lastRight = tiles.empty() ? SCREEN_WIDTH : tiles.back()->x_of_tile + tiles.back()->width_of_tile;
         tiles.push_back(new Tile(lastRight + GetRandomValue(50, 150))); // this is the gap between the new values
     }
+}
+
+void Tile::Hitbox(Color c)
+{
+    // upper part 
+    DrawRectangle(x_of_tile,y_of_tile,width_of_tile,(float)HEIGTH_TILE/3,c);
+    //lower part
+    DrawRectangle(x_of_tile,y_of_tile+(float)HEIGTH_TILE/3,width_of_tile,((float)2*HEIGTH_TILE)/3,WHITE);
 }

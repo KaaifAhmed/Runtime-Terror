@@ -23,16 +23,17 @@ int main()
         BeginDrawing();
         player.Update();
         Tile::Delete_And_Update(tiles);
+        DrawText("The red is the hitbox !",SCREEN_WIDTH/4,30,50,YELLOW);
 
         // checks for collison
         Tile::Collision(player, tiles);
 
         ClearBackground(BLACK);
 
-        player.Draw();
+        player.Hitbox(RED);
         // draw tiles
         for (Tile *t : tiles)
-            t->Draw();
+            t->Hitbox(RED);
         Tile::New_tiles(tiles); // this is a seperate line from the for loop for new tiles
 
         EndDrawing();
