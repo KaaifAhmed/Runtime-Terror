@@ -34,7 +34,7 @@ void Tile::Collision(Player &player, const std::vector<Tile*>& tiles)
               break;
 
             }
-          
+           player.inAir=true; // because he is on a solid block 
 
         }
 }

@@ -27,6 +27,7 @@ void Player::Fall()
         y_velocity = 0;
         y = GROUND_POS - height;
     }
+    
 
     // FALL DOWNWARDS IF IN AIR
     if (inAir)
