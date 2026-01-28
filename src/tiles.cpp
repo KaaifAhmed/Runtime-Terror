@@ -51,11 +51,11 @@ void Tile::Collision(Player &player, const std::vector<Tile *> &tiles)
         {
 
             
-            if(player_right>=tile.width)
+            if(player_right>=tile.x)
             {
                 overlap=player_right-tile.x; // how far it has gone inside
                 player.x=player.x-overlap+1;
-                player.inAir=true;
+                collision=true;
                  break;
             }
         }
