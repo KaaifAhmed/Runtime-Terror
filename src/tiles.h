@@ -11,8 +11,8 @@ public:
     float width_of_tile;
     float x_of_tile;
     float y_of_tile;
-    static constexpr int HEIGTH_TILE = 50;
-    static const int normal_speed = 4;
+    static constexpr float height_of_tile = HEIGTH_TILE;
+    int normal_speed = TILE_SPEED;
 
     Tile(int start_X);
     void Draw();

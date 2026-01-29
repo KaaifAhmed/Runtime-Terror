@@ -13,11 +13,10 @@ void Player::Draw()
 void Player::Hitbox(Color c)
 {
     // upper part (dont go on the platform)
-    DrawRectangle(x,y,width,(float)(2*height)/3,WHITE);
+    DrawRectangle(x, y, width, (float)(2 * height) / 3, WHITE);
 
     // lower part(go on the plat)
-     DrawRectangle(x,y+(float)(2*height)/3,width,(float)(height)/3,c);
-
+    DrawRectangle(x, y + (float)(2 * height) / 3, width, (float)(height) / 3, c);
 }
 
 void Player::Update()
@@ -26,29 +25,34 @@ void Player::Update()
     Move();
     y += y_velocity;
     x += x_velocity;
-
 }
 
 void Player::Fall()
 {
     // STOP FALLING IF ON GROUND
-    // NEED TO REPLACE THIS AFTER COLLISION SETUP
-    if ((y + height) >= GROUND_POS)
+    if (y >= GROUND_POS)
     {
-        inAir = false;
         y_velocity = 0;
-        y = GROUND_POS - height;
+        y = GROUND_POS + 5;
+        DrawText("LOL NOOB! XD", SCREEN_WIDTH/4, 50, 100, WHITE);
+        isGameOver = true;
     }
-    
 
     // FALL DOWNWARDS IF IN AIR
     if (inAir)
     {
-        y_velocity += GRAVITY;
+        delay++;
+        if (delay == GRAVITY_DELAY)
+        {
+            delay = 0;
+            y_velocity += GRAVITY;
+        }
+        
     }
 }
 
-void Player::Move() {
+void Player::Move()
+{
     // MOVE LEFT AND RIGHT USING LEFT/RIGHT KEYS
     if (IsKeyDown(KEY_RIGHT))
     {
@@ -58,10 +62,11 @@ void Player::Move() {
     {
         x_velocity = -PLAYER_SPEED;
     }
-    else {
+    else
+    {
         x_velocity = 0;
     }
-    
+
     // JUMP WHEN SPACE KEY PRESSED
     if (IsKeyPressed(KEY_SPACE))
     {

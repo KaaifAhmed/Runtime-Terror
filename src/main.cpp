@@ -7,13 +7,17 @@
 
 using namespace std;
 
+void drawHitbox();
+void drawTiles();
+void updateTiles();
+
+Player player;
+vector<Tile *> tiles;
+
 int main()
 {
-    Player player;
-    vector<Tile *> tiles;
-
-    // adding the initial tile
-    tiles.push_back(new Tile(SCREEN_WIDTH));
+    // Adding the initial tile
+    tiles.push_back(new Tile(TILES_START_X));
 
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Runtime Terror");
     SetTargetFPS(FPS);
@@ -21,25 +25,46 @@ int main()
     while (!WindowShouldClose())
     {
         BeginDrawing();
-        player.Update();
-        Tile::Delete_And_Update(tiles);
-        DrawText("The red is the hitbox !",SCREEN_WIDTH/4,30,50,YELLOW);
 
-        // checks for collison
-        Tile::Collision(player, tiles);
+        player.Update();
+        if (!player.isGameOver) updateTiles();
 
         ClearBackground(BLACK);
 
-        player.Hitbox(RED);
-        // draw tiles
-        for (Tile *t : tiles)
-            t->Hitbox(RED);
-        Tile::New_tiles(tiles); // this is a seperate line from the for loop for new tiles
+        player.Draw();
+        drawTiles();
+        // drawHitbox();
 
         EndDrawing();
     }
 
     // clean up remaining tiles
     Tile::Cleanup(tiles);
+
     CloseWindow();
+}
+
+void drawHitbox()
+{
+    DrawText("The red is the hitbox!", SCREEN_WIDTH / 3, 30, 40, YELLOW);
+
+    player.Hitbox(RED);
+    for (Tile *t : tiles)
+        t->Hitbox(RED);
+}
+
+void drawTiles()
+{
+    for (Tile *t : tiles)
+        t->Draw();
+
+    Tile::New_tiles(tiles); // this is a seperate line from the for loop for new tiles
+}
+
+void updateTiles()
+{
+    Tile::Delete_And_Update(tiles);
+
+    // checks for collison
+    Tile::Collision(player, tiles);
 }

@@ -11,7 +11,11 @@ public:
     float height=100, width=50;
     Color color=WHITE;
 
+    int delay = 0;
+
     bool inAir = true;
+
+    bool isGameOver = false;
 
     void Draw();
     void Hitbox(Color c);
