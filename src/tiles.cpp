@@ -1,5 +1,6 @@
 #include "tiles.h"
 #include "constants.h"
+#include <string>
 
 Tile::Tile(int startX)
 {
@@ -7,6 +8,7 @@ Tile::Tile(int startX)
     x_of_tile = startX;
     y_of_tile = GetRandomValue(4*SCREEN_HEIGHT/5, 4*SCREEN_HEIGHT/5 - 40);
 }
+int Tile::tile_number = 0;
 
 void Tile::Draw()
 {
@@ -30,14 +32,26 @@ void Tile::Delete_And_Update(std::vector<Tile *> &tiles)
             tiles.erase(tiles.begin() + i); // remove from vector
         }
     }
+
+    if(tile_number>=3)
+    {
+       for(int i = 1; i >= 0; i--)
+        {
+            delete tiles[i];
+            tiles.erase(tiles.begin() + i);
+        }
+        tile_number -= 2;
+
+    }
 }
+
 void Tile::New_tiles(std::vector<Tile *> &tiles)
 {
-    //  spawn new tiles
-    if (tiles.empty() || tiles.back()->x_of_tile + tiles.back()->width_of_tile < SCREEN_WIDTH)
+    while (tiles.size() < 5 || tiles.back()->x_of_tile + tiles.back()->width_of_tile < SCREEN_WIDTH + 400)
     {
         int lastRight = tiles.empty() ? SCREEN_WIDTH : tiles.back()->x_of_tile + tiles.back()->width_of_tile;
-        tiles.push_back(new Tile(lastRight + GetRandomValue(100, 200))); // this is the gap between the new values
+        int gap_between_tiles = GetRandomValue(100, 200);
+        tiles.push_back(new Tile(lastRight + gap_between_tiles));
     }
 }
 
@@ -46,23 +60,24 @@ void Tile::Collision(Player &player, const std::vector<Tile *> &tiles)
     bool collision = false;
     int overlap;
     int player_right = player.x + player.width;
+  
 
     // checking collision
-    for (Tile *t : tiles)
+    for (long long unsigned int i=0;i<tiles.size();i++)
     {
         // checking of bottom of player with top of tile
-        Rectangle tile_top = {t->x_of_tile, t->y_of_tile, t->width_of_tile, ((float)t->height_of_tile) / 3};
+        Rectangle tile_top = {tiles[i]->x_of_tile, tiles[i]->y_of_tile, tiles[i]->width_of_tile, ((float)tiles[i]->height_of_tile) / 3};
         Rectangle player_bottom = {player.x, player.y + (float)(2 * player.height) / 3, player.width, player.height / 3};
 
         // check the rest of player with the entire tile
         Rectangle player_top = {player.x, player.y, player.width, ((float)2 * player.height) / 3};
-        Rectangle tile = {t->x_of_tile, t->y_of_tile, t->width_of_tile, t->height_of_tile};
+        Rectangle tile = {tiles[i]->x_of_tile, tiles[i]->y_of_tile, tiles[i]->width_of_tile, tiles[i]->height_of_tile};
 
         if (CheckCollisionRecs(player_bottom, tile_top))
         {
             player.inAir = false; // because he is on a solid block
-
-            player.y = t->y_of_tile - player.height + 1;
+            tile_number=i+1;
+            player.y = tiles[i]->y_of_tile - player.height + 1;
             player.y_velocity = 0;
             collision = true;
             break;
@@ -79,6 +94,12 @@ void Tile::Collision(Player &player, const std::vector<Tile *> &tiles)
             }
         }
     }
+    // convert int -> string (the string OWNS the memory)
+ std::string tileText = std::to_string(tile_number);
+
+// get const char* from the string
+const char* tile_cstr = tileText.c_str();
+DrawText(tile_cstr,20,SCREEN_HEIGHT-60,45,WHITE);
 
     if (!collision)
     {

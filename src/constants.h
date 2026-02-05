@@ -21,7 +21,6 @@ const float PLAYER_START_Y = 100;
 // TILE CONSTANTS
 const int HEIGTH_TILE = 50;
 const int TILE_SPEED = 5;
-
 const float TILES_START_X = 50;
 
 
