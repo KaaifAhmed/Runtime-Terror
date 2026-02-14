@@ -13,6 +13,7 @@ void updateTiles();
 
 Player player;
 vector<Tile *> tiles;
+Camera2D camera = {0};
 
 int main()
 {
@@ -25,16 +26,23 @@ int main()
     while (!WindowShouldClose())
     {
         BeginDrawing();
-
+        BeginMode2D(camera);
         player.Update();
-        if (!player.isGameOver) updateTiles();
+        // camera.target = (Vector2) {player.x, player.y};
+        camera.offset = (Vector2){ SCREEN_WIDTH/3.0f, 2*SCREEN_HEIGHT/3.0f };
+        camera.target = (Vector2) {player.x, player.y};
+        camera.rotation = 0.0f;
+        camera.zoom = 1.0f;
 
+        if (!player.isGameOver) updateTiles();
+        
         ClearBackground(BLACK);
 
         player.Draw();
         drawTiles();
         // drawHitbox();
 
+        EndMode2D();
         EndDrawing();
     }
 
