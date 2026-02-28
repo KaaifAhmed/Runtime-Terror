@@ -23,5 +23,10 @@ const int HEIGTH_TILE = 50;
 const int TILE_SPEED = 5;
 const float TILES_START_X = 50;
 
+// CLOCK SPEED (Auto-scroll) - increases over time
+const float INITIAL_CLOCK_SPEED = 2.0f;
+const float MAX_CLOCK_SPEED = 8.0f;
+const float CLOCK_SPEED_INCREMENT = 0.1f;
+const int CLOCK_SPEED_INCREASE_INTERVAL = 600; // Every 10 seconds (at 60 FPS)
 
 #endif

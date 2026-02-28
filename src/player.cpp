@@ -70,9 +70,10 @@ void Player::Move()
     // JUMP WHEN SPACE KEY PRESSED
     if (IsKeyPressed(KEY_SPACE))
     {
-        if (!inAir)
+        if (jumpCount < MAX_JUMPS)
         {
-            y_velocity -= JUMP_HEIGHT;
+            y_velocity = -JUMP_HEIGHT;
+            jumpCount++;
             inAir = true;
         }
     }

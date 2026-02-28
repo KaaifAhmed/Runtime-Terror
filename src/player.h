@@ -14,6 +14,8 @@ public:
     int delay = 0;
 
     bool inAir = true;
+    int jumpCount = 0;
+    static const int MAX_JUMPS = 2;
 
     bool isGameOver = false;
 
