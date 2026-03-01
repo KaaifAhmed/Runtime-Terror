@@ -1,6 +1,4 @@
-// tiles.h
-#ifndef TILES_H
-#define TILES_H
+#pragma once 
 #include <vector>
 #include "player.h"
 #include "raylib.h"
@@ -24,5 +22,3 @@ public:
     static void Delete_And_Update(std::vector<Tile *> &tiles, float game_speed);
     static void New_tiles(std::vector<Tile *> &tiles);
 };
-
-#endif

@@ -4,64 +4,9 @@
 #include "player.h"
 #include <vector>
 #include "tiles.h"
+#include "rewind.h"
 
 using namespace std;
-
-struct PlayerState
-{
-    float x;
-    float y;
-};
-
-// The Data Structure
-class RewindBuffer
-{
-private:
-    vector<PlayerState> buffer;
-    int head;     // Where to write the next state
-    int count;    // How many states are currently stored
-    int capacity; // Maximum frames to be stored
-
-public:
-    RewindBuffer(int cap)
-    {
-        capacity = cap;
-        buffer.resize(capacity);
-        head = 0;
-        count = 0;
-    }
-
-    // Called every frame during normal gameplay
-    void Record(PlayerState state)
-    {
-        buffer[head] = state;         // Write data
-        head = (head + 1) % capacity; // Move head forward, wrap around if at end
-
-        if (count < capacity)
-        {
-            count++; // Increase count until full
-        }
-    }
-
-    // Called every frame when the player holds 'Ctrl+Z'
-    bool Rewind(PlayerState &outState)
-    {
-        if (count == 0)
-        {
-            return false; // Nothing left to rewind
-        }
-
-        // Move head backwards, wrapping around properly
-        head = (head - 1 + capacity) % capacity;
-
-        outState = buffer[head]; // Retrieve the state
-        count--;
-
-        return true;
-    }
-
-    int GetCount() { return count; }
-};
 
 void drawHitbox();
 void drawTiles();
@@ -71,12 +16,18 @@ Player player;
 vector<Tile *> tiles;
 float game_speed = 0;
 
+// forward declarations for modularized main loop
+void handleRewind(RewindBuffer &rewindSys);
+void handleNormal(RewindBuffer &rewindSys);
+
 int main()
 {
     RewindBuffer rewindSys(REWIND_SECS*FPS);
 
     // Adding the initial tile
     tiles.push_back(new Tile(TILES_START_X));
+
+    // int delay = 0;
 
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Runtime Terror");
     SetTargetFPS(FPS);
@@ -87,40 +38,11 @@ int main()
 
         if ((IsKeyDown(KEY_Z) && IsKeyDown(KEY_LEFT_CONTROL)) && !player.isGameOver)
         {
-            PlayerState restoredState;
-            if (rewindSys.Rewind(restoredState)) {
-                player.x = restoredState.x;
-                player.y = restoredState.y;
-
-                float reverseSpeed = (game_speed + TILE_SPEED*2)*-1;
-                updateTiles(reverseSpeed);
-
-                ClearBackground(BLACK);
-
-                player.Draw();
-                drawTiles();
-                DrawText("CTRL + Z!", SCREEN_WIDTH/2-300, 100, 100, WHITE);
-            }
+            handleRewind(rewindSys);
         }
         else
         {
-            PlayerState currentState = {player.x, player.y};
-            rewindSys.Record(currentState);
-
-            player.Update();
-
-            // if (GetRandomValue(0, 50) == 50)
-            // {
-            //     game_speed += 0.1;
-            // }
-
-            if (!player.isGameOver)
-                updateTiles(game_speed);
-
-            ClearBackground(BLACK);
-
-            player.Draw();
-            drawTiles();
+            handleNormal(rewindSys);
         }
 
         EndDrawing();
@@ -155,4 +77,44 @@ void updateTiles(float game_speed)
 
     // checks for collison
     Tile::Collision(player, tiles);
+}
+
+// helper called when rewind key pressed
+void handleRewind(RewindBuffer &rewindSys)
+{
+    PlayerState restoredState;
+    if (rewindSys.Rewind(restoredState)) {
+        player.x = restoredState.x;
+        player.y = restoredState.y;
+
+        float reverseSpeed = (game_speed + TILE_SPEED*2)*-1;
+        updateTiles(reverseSpeed);
+
+        ClearBackground(BLACK);
+
+        player.Draw();
+        drawTiles();
+        DrawText("CTRL + Z!", SCREEN_WIDTH/2-300, 100, 100, WHITE);
+    } else {
+        ClearBackground(BLACK);
+        player.Draw();
+        drawTiles();
+        DrawText("Memory capacity reached!", SCREEN_WIDTH/5, 100, 70, WHITE);
+    }
+}
+
+// normal gameplay when rewind not active
+void handleNormal(RewindBuffer &rewindSys)
+{
+    PlayerState currentState = {player.x, player.y};
+    rewindSys.Record(currentState);
+
+    player.Update();
+
+    if (!player.isGameOver)
+        updateTiles(game_speed);
+
+    ClearBackground(BLACK);
+    player.Draw();
+    drawTiles();
 }

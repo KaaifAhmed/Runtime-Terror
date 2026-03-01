@@ -1,5 +1,4 @@
-#ifndef PLAYER_H
-#define PLAYER_H
+#pragma once
 #include "raylib.h"
 #include "constants.h"
 
@@ -21,7 +20,5 @@ public:
     void Hitbox(Color c);
     void Update();
     void Fall();
-    void Move();
+    void Jump();
 };
-
-#endif

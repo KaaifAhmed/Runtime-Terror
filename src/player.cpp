@@ -22,7 +22,7 @@ void Player::Hitbox(Color c)
 void Player::Update()
 {
     Fall();
-    Move();
+    Jump();
     y += y_velocity;
     x += x_velocity;
 }
@@ -51,7 +51,7 @@ void Player::Fall()
     }
 }
 
-void Player::Move()
+void Player::Jump()
 {
     // JUMP WHEN SPACE KEY PRESSED
     if (IsKeyPressed(KEY_SPACE))

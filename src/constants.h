@@ -1,5 +1,4 @@
-#ifndef CONSTANTS_H
-#define CONSTANTS_H
+#pragma once
 
 // WORLD CONSTANTS
 const int SCREEN_WIDTH = 1680;
@@ -25,5 +24,4 @@ const float TILE_SPEED = 6;
 const float TILES_START_X = 50;
 const int LEFT_TILES = 10;
 
-
-#endif
+const int GAME_SPEED_DELAY = 50;
