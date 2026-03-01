@@ -17,11 +17,11 @@ public:
 
     Tile(int start_X);
     void Draw();
-    bool Update(); // update position returns true if offscreen
+    bool Update(float game_speed); // update position returns true if offscreen
     void Hitbox(Color c);
     static void Collision(Player &player, const std::vector<Tile *> &tiles);
     static void Cleanup(std::vector<Tile *> &tiles);
-    static void Delete_And_Update(std::vector<Tile *> &tiles);
+    static void Delete_And_Update(std::vector<Tile *> &tiles, float game_speed);
     static void New_tiles(std::vector<Tile *> &tiles);
 };
 

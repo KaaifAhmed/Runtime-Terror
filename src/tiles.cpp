@@ -15,25 +15,28 @@ void Tile::Draw()
     DrawRectangle(x_of_tile, y_of_tile, width_of_tile, height_of_tile, WHITE);
 }
 
-bool Tile::Update()
+bool Tile::Update(float game_speed)
 {
-    x_of_tile -= normal_speed;               // move left
+    x_of_tile -= normal_speed + game_speed; // move left
+    std::string tileText = std::to_string(game_speed);
+    const char* tile_cstr = tileText.c_str();
+    DrawText(tile_cstr, 100, 100, 20, WHITE);
     return (x_of_tile + width_of_tile <= 0); // true if offscreen
 }
 
-void Tile::Delete_And_Update(std::vector<Tile *> &tiles)
+void Tile::Delete_And_Update(std::vector<Tile *> &tiles, float game_speed)
 {
     // updating the tiles
     for (int i = tiles.size() - 1; i >= 0; i--)
     {
-        if (tiles[i]->Update())
+        if (tiles[i]->Update(game_speed))
         {
             delete tiles[i];                // delete tile if offscreen
             tiles.erase(tiles.begin() + i); // remove from vector
         }
     }
 
-    if(tile_number>=3)
+    if(tile_number >= LEFT_TILES)
     {
        for(int i = 1; i >= 0; i--)
         {
@@ -50,7 +53,7 @@ void Tile::New_tiles(std::vector<Tile *> &tiles)
     while (tiles.size() < 5 || tiles.back()->x_of_tile + tiles.back()->width_of_tile < SCREEN_WIDTH + 400)
     {
         int lastRight = tiles.empty() ? SCREEN_WIDTH : tiles.back()->x_of_tile + tiles.back()->width_of_tile;
-        int gap_between_tiles = GetRandomValue(100, 200);
+        int gap_between_tiles = GetRandomValue(100, 150);
         tiles.push_back(new Tile(lastRight + gap_between_tiles));
     }
 }

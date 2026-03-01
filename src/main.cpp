@@ -9,11 +9,12 @@ using namespace std;
 
 void drawHitbox();
 void drawTiles();
-void updateTiles();
+void updateTiles(float game_speed);
 
 Player player;
 vector<Tile *> tiles;
-Camera2D camera = {0};
+float game_speed = 0;
+// Camera2D camera = {0};
 
 int main()
 {
@@ -26,23 +27,29 @@ int main()
     while (!WindowShouldClose())
     {
         BeginDrawing();
-        BeginMode2D(camera);
-        player.Update();
-        // camera.target = (Vector2) {player.x, player.y};
-        camera.offset = (Vector2){ SCREEN_WIDTH/3.0f, 2*SCREEN_HEIGHT/3.0f };
-        camera.target = (Vector2) {player.x, player.y};
-        camera.rotation = 0.0f;
-        camera.zoom = 1.0f;
+        // BeginMode2D(camera);
 
-        if (!player.isGameOver) updateTiles();
+        player.Update();
+        // camera.offset = (Vector2){ SCREEN_WIDTH/3.0f, 2*SCREEN_HEIGHT/3.0f };
+        // camera.target = (Vector2) {player.x, 4*SCREEN_HEIGHT/5 - 40};
+        // camera.rotation = 0.0f;
+        // camera.zoom = 1.0f;
+
+        if (GetRandomValue(0,50) == 50)
+        {
+            game_speed += 0.1;
+        }
+        
+
+        if (!player.isGameOver) updateTiles(game_speed);
         
         ClearBackground(BLACK);
 
         player.Draw();
         drawTiles();
-        // drawHitbox();
+        
 
-        EndMode2D();
+        // EndMode2D();
         EndDrawing();
     }
 
@@ -69,9 +76,9 @@ void drawTiles()
     Tile::New_tiles(tiles); // this is a seperate line from the for loop for new tiles
 }
 
-void updateTiles()
+void updateTiles(float game_speed)
 {
-    Tile::Delete_And_Update(tiles);
+    Tile::Delete_And_Update(tiles, game_speed);
 
     // checks for collison
     Tile::Collision(player, tiles);

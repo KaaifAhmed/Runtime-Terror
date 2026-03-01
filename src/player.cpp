@@ -53,19 +53,19 @@ void Player::Fall()
 
 void Player::Move()
 {
-    // MOVE LEFT AND RIGHT USING LEFT/RIGHT KEYS
-    if (IsKeyDown(KEY_RIGHT))
-    {
-        x_velocity = PLAYER_SPEED;
-    }
-    else if (IsKeyDown(KEY_LEFT))
-    {
-        x_velocity = -PLAYER_SPEED;
-    }
-    else
-    {
-        x_velocity = 0;
-    }
+    // // MOVE LEFT AND RIGHT USING LEFT/RIGHT KEYS
+    // if (IsKeyDown(KEY_RIGHT))
+    // {
+    //     x_velocity = PLAYER_SPEED;
+    // }
+    // else if (IsKeyDown(KEY_LEFT))
+    // {
+    //     x_velocity = -PLAYER_SPEED;
+    // }
+    // else
+    // {
+    //     x_velocity = 0;
+    // }
 
     // JUMP WHEN SPACE KEY PRESSED
     if (IsKeyPressed(KEY_SPACE))

@@ -15,13 +15,14 @@ const int GROUND_POS = SCREEN_HEIGHT;
 const int PLAYER_SPEED = 6;
 const int JUMP_HEIGHT = 25;
 
-const float PLAYER_START_X = 50;
+const float PLAYER_START_X = 100;
 const float PLAYER_START_Y = 100;
 
 // TILE CONSTANTS
 const int HEIGTH_TILE = 50;
-const int TILE_SPEED = 5;
+const float TILE_SPEED = 5;
 const float TILES_START_X = 50;
+const int LEFT_TILES = 5;
 
 
 #endif
