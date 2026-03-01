@@ -18,9 +18,6 @@ void Tile::Draw()
 bool Tile::Update(float game_speed)
 {
     x_of_tile -= normal_speed + game_speed; // move left
-    std::string tileText = std::to_string(game_speed);
-    const char* tile_cstr = tileText.c_str();
-    DrawText(tile_cstr, 100, 100, 20, WHITE);
     return (x_of_tile + width_of_tile <= 0); // true if offscreen
 }
 
@@ -29,11 +26,12 @@ void Tile::Delete_And_Update(std::vector<Tile *> &tiles, float game_speed)
     // updating the tiles
     for (int i = tiles.size() - 1; i >= 0; i--)
     {
-        if (tiles[i]->Update(game_speed))
-        {
-            delete tiles[i];                // delete tile if offscreen
-            tiles.erase(tiles.begin() + i); // remove from vector
-        }
+        tiles[i]->Update(game_speed);
+        // if (tiles[i]->Update(game_speed))
+        // {
+        //     delete tiles[i];                // delete tile if offscreen
+        //     tiles.erase(tiles.begin() + i); // remove from vector
+        // }
     }
 
     if(tile_number >= LEFT_TILES)

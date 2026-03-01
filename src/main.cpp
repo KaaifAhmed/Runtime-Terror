@@ -7,6 +7,63 @@
 
 using namespace std;
 
+// 1. A simplified version of what you want to save
+struct PlayerState
+{
+    float x;
+    float y;
+};
+
+// 2. The Data Structure
+class RewindBuffer
+{
+private:
+    vector<PlayerState> buffer;
+    int head;     // Where to write the next state
+    int count;    // How many states are currently stored
+    int capacity; // Maximum states (e.g., 300)
+
+public:
+    RewindBuffer(int cap)
+    {
+        capacity = cap;
+        buffer.resize(capacity);
+        head = 0;
+        count = 0;
+    }
+
+    // Called every frame during normal gameplay
+    void Record(PlayerState state)
+    {
+        buffer[head] = state;         // Write data
+        head = (head + 1) % capacity; // Move head forward, wrap around if at end
+
+        if (count < capacity)
+        {
+            count++; // Increase count until full
+        }
+    }
+
+    // Called every frame when the player holds 'Ctrl+Z'
+    bool Rewind(PlayerState &outState)
+    {
+        if (count == 0)
+        {
+            return false; // Nothing left to rewind
+        }
+
+        // Move head backwards, wrapping around properly
+        head = (head - 1 + capacity) % capacity;
+
+        outState = buffer[head]; // Retrieve the state
+        count--;                 // We "consumed" a state
+
+        return true;
+    }
+
+    int GetCount() { return count; }
+};
+
 void drawHitbox();
 void drawTiles();
 void updateTiles(float game_speed);
@@ -14,10 +71,11 @@ void updateTiles(float game_speed);
 Player player;
 vector<Tile *> tiles;
 float game_speed = 0;
-// Camera2D camera = {0};
 
 int main()
 {
+    RewindBuffer rewindSys(REWIND_SECS*FPS);
+
     // Adding the initial tile
     tiles.push_back(new Tile(TILES_START_X));
 
@@ -27,29 +85,45 @@ int main()
     while (!WindowShouldClose())
     {
         BeginDrawing();
-        // BeginMode2D(camera);
 
-        player.Update();
-        // camera.offset = (Vector2){ SCREEN_WIDTH/3.0f, 2*SCREEN_HEIGHT/3.0f };
-        // camera.target = (Vector2) {player.x, 4*SCREEN_HEIGHT/5 - 40};
-        // camera.rotation = 0.0f;
-        // camera.zoom = 1.0f;
-
-        if (GetRandomValue(0,50) == 50)
+        if ((IsKeyDown(KEY_Z) && IsKeyDown(KEY_LEFT_CONTROL)) && !player.isGameOver)
         {
-            game_speed += 0.1;
+            PlayerState restoredState;
+            if (rewindSys.Rewind(restoredState)) {
+                player.x = restoredState.x;
+                player.y = restoredState.y;
+
+                float reverseSpeed = (game_speed + TILE_SPEED*2)*-1;
+                updateTiles(reverseSpeed);
+
+                ClearBackground(BLACK);
+
+                player.Draw();
+                drawTiles();
+                DrawText("CTRL + Z!", SCREEN_WIDTH/2-300, 100, 100, WHITE);
+            }
         }
-        
+        else
+        {
+            PlayerState currentState = {player.x, player.y};
+            rewindSys.Record(currentState);
 
-        if (!player.isGameOver) updateTiles(game_speed);
-        
-        ClearBackground(BLACK);
+            player.Update();
 
-        player.Draw();
-        drawTiles();
-        
+            if (GetRandomValue(0, 50) == 50)
+            {
+                game_speed += 0.1;
+            }
 
-        // EndMode2D();
+            if (!player.isGameOver)
+                updateTiles(game_speed);
+
+            ClearBackground(BLACK);
+
+            player.Draw();
+            drawTiles();
+        }
+
         EndDrawing();
     }
 

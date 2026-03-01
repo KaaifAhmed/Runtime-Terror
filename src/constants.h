@@ -5,6 +5,7 @@
 const int SCREEN_WIDTH = 1680;
 const int SCREEN_HEIGHT = 900;
 const int FPS = 60;
+const int REWIND_SECS = 5;
 
 const int GRAVITY = 5;
 const int GRAVITY_DELAY = 3;
@@ -20,9 +21,9 @@ const float PLAYER_START_Y = 100;
 
 // TILE CONSTANTS
 const int HEIGTH_TILE = 50;
-const float TILE_SPEED = 5;
+const float TILE_SPEED = 6;
 const float TILES_START_X = 50;
-const int LEFT_TILES = 5;
+const int LEFT_TILES = 10;
 
 
 #endif
