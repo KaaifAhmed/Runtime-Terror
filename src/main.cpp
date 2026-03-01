@@ -7,21 +7,20 @@
 
 using namespace std;
 
-// 1. A simplified version of what you want to save
 struct PlayerState
 {
     float x;
     float y;
 };
 
-// 2. The Data Structure
+// The Data Structure
 class RewindBuffer
 {
 private:
     vector<PlayerState> buffer;
     int head;     // Where to write the next state
     int count;    // How many states are currently stored
-    int capacity; // Maximum states (e.g., 300)
+    int capacity; // Maximum frames to be stored
 
 public:
     RewindBuffer(int cap)
@@ -56,7 +55,7 @@ public:
         head = (head - 1 + capacity) % capacity;
 
         outState = buffer[head]; // Retrieve the state
-        count--;                 // We "consumed" a state
+        count--;
 
         return true;
     }
@@ -110,10 +109,10 @@ int main()
 
             player.Update();
 
-            if (GetRandomValue(0, 50) == 50)
-            {
-                game_speed += 0.1;
-            }
+            // if (GetRandomValue(0, 50) == 50)
+            // {
+            //     game_speed += 0.1;
+            // }
 
             if (!player.isGameOver)
                 updateTiles(game_speed);

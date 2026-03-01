@@ -12,7 +12,7 @@ public:
     float x_of_tile;
     float y_of_tile;
     static constexpr float height_of_tile = HEIGTH_TILE;
-    static int tile_number; // this tells us on which tile the player is on (after the player reaches the 3rd tile the first 2 tiles are to be deleted)
+    static int tile_number; // this tells us on which tile the player is on (after the player reaches the 10th tile the first 2 tiles are to be deleted)
     int normal_speed = TILE_SPEED;
 
     Tile(int start_X);
