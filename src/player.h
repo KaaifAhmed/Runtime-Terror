@@ -16,6 +16,8 @@ public:
 
     bool isGameOver = false;
 
+    Rectangle GetCollisionRect() const;
+    Rectangle GetNonCollisionRect() const;
     void Draw();
     void Hitbox(Color c);
     void Update();

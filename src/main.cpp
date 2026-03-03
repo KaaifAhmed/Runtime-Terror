@@ -38,11 +38,44 @@ int main()
 
         if ((IsKeyDown(KEY_Z) && IsKeyDown(KEY_LEFT_CONTROL)) && !player.isGameOver)
         {
+<<<<<<< Updated upstream
             handleRewind(rewindSys);
         }
         else
         {
             handleNormal(rewindSys);
+=======
+            PlayerState restoredState;
+            if (rewindSys.Rewind(restoredState)) {
+                player.x = restoredState.x;
+                player.y = restoredState.y;
+
+                float reverseSpeed = (game_speed + TILE_SPEED*2)*-1;
+                updateTiles(reverseSpeed);
+
+                ClearBackground(BLACK);
+
+                player.Hitbox(ORANGE);
+                drawTiles();
+                DrawText("CTRL + Z!", SCREEN_WIDTH/2-300, 100, 100, WHITE);
+            }
+        }
+        else
+        {
+            PlayerState currentState = {player.x, player.y};
+            rewindSys.Record(currentState);
+
+            player.Update();
+           Tile::WarningText(Tile::tile_number);
+           
+            if (!player.isGameOver)
+                updateTiles(game_speed);
+
+            ClearBackground(BLACK);
+
+            player.Draw();
+            drawTiles();
+>>>>>>> Stashed changes
         }
 
         EndDrawing();
@@ -66,7 +99,7 @@ void drawHitbox()
 void drawTiles()
 {
     for (Tile *t : tiles)
-        t->Draw();
+        t->Draw(t->variance);
 
     Tile::New_tiles(tiles); // this is a seperate line from the for loop for new tiles
 }

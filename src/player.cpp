@@ -12,13 +12,27 @@ void Player::Draw()
 
 void Player::Hitbox(Color c)
 {
-    // upper part (dont go on the platform)
-    DrawRectangle(x, y, width, (float)(2 * height) / 3, WHITE);
+    float topHeight    = height * HITBOX_SPLIT;
+    float bottomHeight = height * (1.0f - HITBOX_SPLIT);
 
-    // lower part(go on the plat)
-    DrawRectangle(x, y + (float)(2 * height) / 3, width, (float)(height) / 3, c);
+    // upper part (dont go on the platform)
+    DrawRectangle(x, y, width, topHeight, WHITE);
+
+    // lower part (go on the plat) — change HITBOX_SPLIT and both halves adjust
+    DrawRectangle(x, y + topHeight, width, bottomHeight, c);
 }
 
+// Returns the bottom (collidable) portion of the player as a Rectangle
+// Always in sync with Hitbox() — both driven by HITBOX_SPLIT
+Rectangle Player::GetCollisionRect() const
+ {
+    return { x, y + height * HITBOX_SPLIT, width, height * (1.0f - HITBOX_SPLIT) };
+ }
+
+ Rectangle Player::GetNonCollisionRect() const
+{
+    return { x, y, width, height * HITBOX_SPLIT };
+}
 void Player::Update()
 {
     Fall();

@@ -15,8 +15,13 @@ const int GROUND_POS = SCREEN_HEIGHT;
 const int PLAYER_SPEED = 6;
 const int JUMP_HEIGHT = 25;
 
+
 const float PLAYER_START_X = 100;
 const float PLAYER_START_Y = 100;
+
+// HITBOX SPLIT — fraction of player height where the bottom (collidable) part starts
+// Change this one value and both Hitbox() and collision checks update automatically
+const float HITBOX_SPLIT = 0.90f;  // bottom 2px out of 100px height
 
 // TILE CONSTANTS
 const int HEIGTH_TILE = 50;
