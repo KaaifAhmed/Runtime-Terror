@@ -28,5 +28,6 @@ const int HEIGTH_TILE = 50;
 const float TILE_SPEED = 6;
 const float TILES_START_X = 50;
 const int LEFT_TILES = 10;
-
+const int VARIENT_SPAWNER=2; // Tile number after which tile can become corrupt
 const int GAME_SPEED_DELAY = 50;
+const int MAX_DELAY=12; //0.2 sec(12/60=0.2)

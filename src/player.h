@@ -2,13 +2,15 @@
 #include "raylib.h"
 #include "constants.h"
 
-class Player {
+class Player
+{
 public:
-    float x=PLAYER_START_X, y=PLAYER_START_Y;
+
+    float x = PLAYER_START_X, y = PLAYER_START_Y;
     float y_velocity = 0, x_velocity = 0;
-    
-    float height=100, width=50;
-    Color color=WHITE;
+
+    float height = 100, width = 50;
+    Color color = WHITE;
 
     int delay = 0;
 
@@ -23,4 +25,5 @@ public:
     void Update();
     void Fall();
     void Jump();
+   
 };

@@ -1,12 +1,15 @@
 #include "tiles.h"
 #include "constants.h"
 #include <string>
+#include<iostream>
+using namespace std;
 int Tile::tile_number = 0;
-
+int Tile::delay_count=0;
+ Bhop_Buffer Tile:: spaceBuffer;
 
 Tile::Tile(int startX)
 {
-    if (tile_number >= 6) // after the player has jumped 6 tiles then tiles become red
+    if (tile_number >= VARIENT_SPAWNER) // after the player has jumped 6 tiles then tiles become red
     {
         if (Chance(30)) // 30 percent chance to be red
         {
@@ -74,9 +77,22 @@ void Tile::New_tiles(std::vector<Tile *> &tiles)
 
 void Tile::Collision(Player &player, const std::vector<Tile *> &tiles)
 {
+            // --- 1. UPDATE BUFFER ---
+        if (IsKeyPressed(KEY_R))
+        {
+            spaceBuffer.framesLeft = spaceBuffer.maxFrames;
+            cout<<"Max frames aquired\n";
+        }
+        else if (spaceBuffer.framesLeft > 0)
+        {
+            spaceBuffer.framesLeft--;
+            cout<<spaceBuffer.framesLeft<<endl;
+        }
+
     bool collision = false;
     int overlap;
     int player_right = player.x + player.width;
+    
 
     for (unsigned int i = 0; i < tiles.size(); i++)
     {
@@ -117,20 +133,22 @@ void Tile::Collision(Player &player, const std::vector<Tile *> &tiles)
         else
         {
 
-            if (CheckCollisionRecs(player.GetCollisionRect(),tile_top))
+            if (CheckCollisionRecs(non_variant_player_bottom,tile_top))
             {
-                if (player.y + player.height < tiles[i]->y_of_tile+ ((float)tiles[i]->height_of_tile) / 3)
-                {
-                    if (IsKeyDown(KEY_R))
+                cout<<"collided with tile"<<tile_number<<" ";
+                
+             //   if (player.y + player.height < tiles[i]->y_of_tile+ ((float)tiles[i]->height_of_tile) / 3) // bottom left corner  of player < less then bottom left corner of collidible part of tile
+              //  {
+                    if (spaceBuffer.framesLeft>0)
                     {
-                        player.y_velocity -= JUMP_HEIGHT;
-                    }
+                         player.y_velocity -= JUMP_HEIGHT;
+                    } 
                     else
                     {
                        player.isGameOver=true;
                       
                     }
-                }
+               // }
             }
         }
     }
@@ -147,12 +165,23 @@ void Tile::Cleanup(std::vector<Tile *> &tiles)
     tiles.clear();
 }
 
-void Tile::Hitbox(Color c)
+void Tile::Hitbox(Color c,bool variance)
 {
-    // upper part
+    if(!variance)
+    {
+         // upper part
     DrawRectangle(x_of_tile, y_of_tile, width_of_tile, (float)height_of_tile / 3, c);
     // lower part
     DrawRectangle(x_of_tile, y_of_tile + (float)height_of_tile / 3, width_of_tile, ((float)2 * height_of_tile) / 3, WHITE);
+    }
+    else
+    {
+    // upper part
+    DrawRectangle(x_of_tile, y_of_tile, width_of_tile, (float)height_of_tile / 3, RED);
+    // lower part
+    DrawRectangle(x_of_tile, y_of_tile + (float)height_of_tile / 3, width_of_tile, ((float)2 * height_of_tile) / 3, WHITE);   
+    }
+   
 }
 bool Tile::Chance(int percent)
 {
@@ -161,10 +190,10 @@ bool Tile::Chance(int percent)
 
 void Tile::WarningText(int tile_number,Player player)
 {
-    if (tile_number >= 6)
+    if (tile_number >= VARIENT_SPAWNER)
     {
         static int start_time = -1;
-        if (start_time == -1) start_time = GetTime(); // only set when we first hit tile 6
+        if (start_time == -1) start_time = GetTime(); // only set when we first hit VARIENT_SPAWNER
 
         double elapsed = GetTime() - start_time;
 
@@ -174,7 +203,7 @@ void Tile::WarningText(int tile_number,Player player)
         }
         else if (elapsed <= 4.0)
         {
-            DrawText("Press \"R\" to deflect!", SCREEN_WIDTH / 4, 50, 100, RED);
+            DrawText("Press \"R\" to deflect!", SCREEN_WIDTH / 6, 50, 100, RED);
         }
     }
 }

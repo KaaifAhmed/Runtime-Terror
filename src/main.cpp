@@ -38,13 +38,6 @@ int main()
 
         if ((IsKeyDown(KEY_Z) && IsKeyDown(KEY_LEFT_CONTROL)) && !player.isGameOver)
         {
-<<<<<<< Updated upstream
-            handleRewind(rewindSys);
-        }
-        else
-        {
-            handleNormal(rewindSys);
-=======
             PlayerState restoredState;
             if (rewindSys.Rewind(restoredState)) {
                 player.x = restoredState.x;
@@ -66,16 +59,15 @@ int main()
             rewindSys.Record(currentState);
 
             player.Update();
-           Tile::WarningText(Tile::tile_number);
+           Tile::WarningText(Tile::tile_number,player);
            
             if (!player.isGameOver)
                 updateTiles(game_speed);
 
             ClearBackground(BLACK);
 
-            player.Draw();
+            player.Hitbox(ORANGE);
             drawTiles();
->>>>>>> Stashed changes
         }
 
         EndDrawing();
@@ -93,13 +85,13 @@ void drawHitbox()
 
     player.Hitbox(RED);
     for (Tile *t : tiles)
-        t->Hitbox(RED);
+        t->Hitbox(ORANGE,t->variance);
 }
 
 void drawTiles()
 {
-    for (Tile *t : tiles)
-        t->Draw(t->variance);
+  for (Tile *t : tiles)
+        t->Hitbox(ORANGE,t->variance);
 
     Tile::New_tiles(tiles); // this is a seperate line from the for loop for new tiles
 }
