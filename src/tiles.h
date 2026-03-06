@@ -2,6 +2,7 @@
 #include <vector>
 #include "player.h"
 #include "raylib.h"
+#include <iostream>
 struct Bhop_Buffer
 {
     float framesLeft;
@@ -16,18 +17,28 @@ public:
     float y;
     static constexpr float height_of_tile = HEIGHT_TILE;
     static int tile_number; // this tells us on which tile the player is on (after the player reaches the 10th tile the first 2 tiles are to be deleted)
-    static int normal_speed;
-    bool variance = false; // tells if a tile is red or white
-    static int delay_count;
+    static float normal_speed;
+    enum class TileType
+    {
+        NORMAL,
+        SYNTAX,
+        LOGICAL
+    };
+
+    TileType variance = TileType::NORMAL;
 
     Tile(int start_X);
-    void Draw(bool variance);
+    void Draw(TileType variance);
     bool Update(float game_speed); // update position returns true if offscreen
-    void Hitbox(Color c, bool variance);
+    void Hitbox(Color c, TileType variance);
     static void Collision(Player &player, const std::vector<Tile *> &tiles);
     static void Cleanup(std::vector<Tile *> &tiles);
     static void Delete_And_Update(std::vector<Tile *> &tiles, float game_speed);
     static void New_tiles(std::vector<Tile *> &tiles);
-    bool Chance(int percent);
     static void WarningText(int number_of_tile, Player player);
+    
+    private:
+    static void SmoothCountdown(float &value, float startValue);
+    
+     bool Chance(int percent);
 };

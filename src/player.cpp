@@ -60,7 +60,6 @@ void Player::Fall()
     {
         y_velocity = 0;
         y = GROUND_POS + 5;  // Slight offset to prevent clipping
-        DrawText("LOL NOOB! XD", SCREEN_WIDTH/4, 50, 100, WHITE);
         isGameOver = true;
     }
 

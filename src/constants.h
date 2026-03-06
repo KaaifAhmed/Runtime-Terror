@@ -12,7 +12,6 @@ const int GRAVITY_DELAY = 3;
 const int GROUND_POS = SCREEN_HEIGHT;
 
 // PLAYER CONSTANTS
-const int PLAYER_SPEED = 6;
 const int JUMP_HEIGHT = 25;
 
 
@@ -30,4 +29,4 @@ const float TILES_START_X = 50;
 const int LEFT_TILES = 10;
 const int VARIANT_SPAWNER=2; // Tile number after which tile can become corrupt
 const int GAME_SPEED_DELAY = 50;
-const int MAX_DELAY=12; //0.2 sec(12/60=0.2)
+const float Speed_DELAY_DURATION =1.5f; // so speed of tile will be completely 0 in this many seconds
