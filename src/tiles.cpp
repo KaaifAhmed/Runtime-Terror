@@ -5,6 +5,7 @@
 using namespace std;
 int Tile::tile_number = 0;
 int Tile::delay_count = 0;
+int Tile::normal_speed = TILE_SPEED;
 Bhop_Buffer Tile::spaceBuffer;
 
 Tile::Tile(int startX)
@@ -19,7 +20,7 @@ Tile::Tile(int startX)
 
     width = GetRandomValue(200, 500);
     x = startX;
-    y = GetRandomValue(4 * SCREEN_HEIGHT / 5, 4 * SCREEN_HEIGHT / 5 - 40);
+    y = 4 * SCREEN_HEIGHT / 5;
 }
 
 void Tile::Draw(bool variance)
@@ -30,7 +31,7 @@ void Tile::Draw(bool variance)
 
 bool Tile::Update(float game_speed)
 {
-    // x -= normal_speed + game_speed;  // Move left
+    x -= normal_speed + game_speed;  // Move left
     return (x + width <= 0); // True if offscreen
 }
 
@@ -66,6 +67,10 @@ void Tile::New_tiles(std::vector<Tile *> &tiles)
     {
         int lastRight = tiles.empty() ? SCREEN_WIDTH : tiles.back()->x + tiles.back()->width;
         int gap = GetRandomValue(100, 150);
+        if (!tiles.empty() && tiles.back()->variance)
+        {
+            gap = 0;  // No gap after a variance tile to prevent pits
+        }
         tiles.push_back(new Tile(lastRight + gap));
     }
 }
@@ -130,17 +135,21 @@ void Tile::Collision(Player &player, const std::vector<Tile *> &tiles)
 
             if (CheckCollisionRecs(playerBottom, tileTop))
             {
-                cout << "Collided with tile " << tile_number << " ";
-
+                cout << "Collided with tile " << tile_number << endl;
                 // If bhop buffer active, jump instead of game over
                 if (spaceBuffer.framesLeft > 0)
                 {
-                    player.y_velocity -= JUMP_HEIGHT;
+                    cout << "player jumped!" << endl;
+                    player.y_velocity -= JUMP_HEIGHT *2;
+                    spaceBuffer.framesLeft = 0;
+                    player.inAir = true;
                 }
                 else
                 {
                     player.isGameOver = true;
                 }
+
+                break;
             }
         }
     }

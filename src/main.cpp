@@ -5,6 +5,7 @@
 #include <vector>
 #include "tiles.h"
 #include "rewind.h"
+#include <iostream>
 
 using namespace std;
 
@@ -26,13 +27,6 @@ int main()
     // Initialize rewind system with capacity for REWIND_SECS seconds
     RewindBuffer rewindSys(REWIND_SECS * FPS);
 
-    // Set up camera to follow player
-    Camera2D camera = {0};
-    camera.target = (Vector2){ player.x + 20.0f, 500 };
-    camera.offset = (Vector2){ 100, SCREEN_HEIGHT - 400 };
-    camera.rotation = 0.0f;
-    camera.zoom = 1.0f;
-
     // Add initial tile
     tiles.push_back(new Tile(TILES_START_X));
 
@@ -44,10 +38,6 @@ int main()
     while (!WindowShouldClose())
     {
         BeginDrawing();
-        BeginMode2D(camera);
-
-        // Update camera to follow player
-        camera.target = (Vector2){ player.x + 20, 500 };
 
         // Check for rewind input (Ctrl+Z)
         if ((IsKeyDown(KEY_Z) && IsKeyDown(KEY_LEFT_CONTROL)) && !player.isGameOver)
@@ -80,15 +70,15 @@ int main()
 
             player.isReversed = false;
 
-            // Update player
-            player.Update();
-
             // Show warning text if needed
             Tile::WarningText(Tile::tile_number, player);
 
             // Update tiles if game not over
             if (!player.isGameOver)
                 updateTiles(game_speed);
+
+            // Update player
+            player.Update();
 
             // Draw normal state
             ClearBackground(BLACK);

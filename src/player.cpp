@@ -48,12 +48,12 @@ void Player::Update()
 // Handle falling logic
 void Player::Fall()
 {
-    if (!isReversed)
-    {
-        x_velocity = TILE_SPEED; // No horizontal movement for now, can be expanded later
-    } else {
-        x_velocity = -1 * TILE_SPEED;
-    }
+    // if (!isReversed)
+    // {
+    //     x_velocity = TILE_SPEED; // No horizontal movement for now, can be expanded later
+    // } else {
+    //     x_velocity = -1 * TILE_SPEED;
+    // }
     
     // Stop falling if on ground
     if (y >= GROUND_POS)
