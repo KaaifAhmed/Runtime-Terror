@@ -12,6 +12,8 @@ public:
     float height = 100, width = 50;
     Color color = WHITE;
 
+    bool isReversed = false; // true if player is currently rewinding
+
     int delay = 0;
 
     bool inAir = true;

@@ -8,64 +8,90 @@
 
 using namespace std;
 
-void drawHitbox();
-void drawTiles();
-void updateTiles(float game_speed);
-
+// Global player and tiles
 Player player;
 vector<Tile *> tiles;
-float game_speed = 0;
+float game_speed = 0;  // Current game speed (affects tile movement)
 
 // forward declarations for modularized main loop
 void handleRewind(RewindBuffer &rewindSys);
 void handleNormal(RewindBuffer &rewindSys);
+// Function declarations
+void drawHitbox();
+void drawTiles();
+void updateTiles(float game_speed);
 
 int main()
 {
-    RewindBuffer rewindSys(REWIND_SECS*FPS);
+    // Initialize rewind system with capacity for REWIND_SECS seconds
+    RewindBuffer rewindSys(REWIND_SECS * FPS);
 
-    // Adding the initial tile
+    // Set up camera to follow player
+    Camera2D camera = {0};
+    camera.target = (Vector2){ player.x + 20.0f, 500 };
+    camera.offset = (Vector2){ 100, SCREEN_HEIGHT - 400 };
+    camera.rotation = 0.0f;
+    camera.zoom = 1.0f;
+
+    // Add initial tile
     tiles.push_back(new Tile(TILES_START_X));
 
-    // int delay = 0;
-
+    // Initialize window and set FPS
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Runtime Terror");
     SetTargetFPS(FPS);
 
+    // Main game loop
     while (!WindowShouldClose())
     {
         BeginDrawing();
+        BeginMode2D(camera);
 
+        // Update camera to follow player
+        camera.target = (Vector2){ player.x + 20, 500 };
+
+        // Check for rewind input (Ctrl+Z)
         if ((IsKeyDown(KEY_Z) && IsKeyDown(KEY_LEFT_CONTROL)) && !player.isGameOver)
         {
+            // Attempt to rewind player state
             PlayerState restoredState;
             if (rewindSys.Rewind(restoredState)) {
                 player.x = restoredState.x;
                 player.y = restoredState.y;
 
-                float reverseSpeed = (game_speed + TILE_SPEED*2)*-1;
+                // Rewind tiles at reverse speed
+                float reverseSpeed = (game_speed + TILE_SPEED * 2) * -1;
                 updateTiles(reverseSpeed);
 
                 ClearBackground(BLACK);
+                player.isReversed = true;
 
+                // Draw rewind state
+                ClearBackground(BLACK);
                 player.Hitbox(ORANGE);
                 drawTiles();
-                DrawText("CTRL + Z!", SCREEN_WIDTH/2-300, 100, 100, WHITE);
+                DrawText("CTRL + Z!", SCREEN_WIDTH/2 - 300, 100, 100, WHITE);
             }
         }
         else
         {
+            // Normal gameplay: record state and update
             PlayerState currentState = {player.x, player.y};
             rewindSys.Record(currentState);
 
+            player.isReversed = false;
+
+            // Update player
             player.Update();
-           Tile::WarningText(Tile::tile_number,player);
-           
+
+            // Show warning text if needed
+            Tile::WarningText(Tile::tile_number, player);
+
+            // Update tiles if game not over
             if (!player.isGameOver)
                 updateTiles(game_speed);
 
+            // Draw normal state
             ClearBackground(BLACK);
-
             player.Hitbox(ORANGE);
             drawTiles();
         }
@@ -73,9 +99,8 @@ int main()
         EndDrawing();
     }
 
-    // clean up remaining tiles
+    // Clean up tiles
     Tile::Cleanup(tiles);
-
     CloseWindow();
 }
 

@@ -1,45 +1,42 @@
 #include "tiles.h"
 #include "constants.h"
 #include <string>
-#include<iostream>
+#include <iostream>
 using namespace std;
 int Tile::tile_number = 0;
-int Tile::delay_count=0;
- Bhop_Buffer Tile:: spaceBuffer;
+int Tile::delay_count = 0;
+Bhop_Buffer Tile::spaceBuffer;
 
 Tile::Tile(int startX)
 {
-    if (tile_number >= VARIENT_SPAWNER) // after the player has jumped 6 tiles then tiles become red
+    if (tile_number >= VARIANT_SPAWNER) // after the player has jumped some tiles, tiles can become red
     {
-        if (Chance(30)) // 30 percent chance to be red
+        if (Chance(30)) // 30% chance to be red
         {
             this->variance = true;
         }
-        
     }
 
-    width_of_tile = GetRandomValue(200, 500);
-    x_of_tile = startX;
-    y_of_tile = GetRandomValue(4 * SCREEN_HEIGHT / 5, 4 * SCREEN_HEIGHT / 5 - 40);
+    width = GetRandomValue(200, 500);
+    x = startX;
+    y = GetRandomValue(4 * SCREEN_HEIGHT / 5, 4 * SCREEN_HEIGHT / 5 - 40);
 }
 
 void Tile::Draw(bool variance)
 {
-    if (!variance)
-        DrawRectangle(x_of_tile, y_of_tile, width_of_tile, height_of_tile, WHITE);
-    else
-        DrawRectangle(x_of_tile, y_of_tile, width_of_tile, height_of_tile, RED);
+    Color color = variance ? RED : WHITE;
+    DrawRectangle(x, y, width, height_of_tile, color);
 }
 
 bool Tile::Update(float game_speed)
 {
-    x_of_tile -= normal_speed + game_speed;  // move left
-    return (x_of_tile + width_of_tile <= 0); // true if offscreen
+    // x -= normal_speed + game_speed;  // Move left
+    return (x + width <= 0); // True if offscreen
 }
 
 void Tile::Delete_And_Update(std::vector<Tile *> &tiles, float game_speed)
 {
-    // updating the tiles
+    // Update all tiles and mark for deletion if offscreen
     for (int i = tiles.size() - 1; i >= 0; i--)
     {
         tiles[i]->Update(game_speed);
@@ -50,6 +47,7 @@ void Tile::Delete_And_Update(std::vector<Tile *> &tiles, float game_speed)
         // }
     }
 
+    // If too many tiles accumulated, delete oldest ones to save memory
     if (tile_number >= LEFT_TILES)
     {
         for (int i = 1; i >= 0; i--)
@@ -63,69 +61,66 @@ void Tile::Delete_And_Update(std::vector<Tile *> &tiles, float game_speed)
 
 void Tile::New_tiles(std::vector<Tile *> &tiles)
 {
-    while (tiles.size() < 5 || tiles.back()->x_of_tile + tiles.back()->width_of_tile < SCREEN_WIDTH + 400)
+    // Ensure at least 5 tiles, and always have tiles extending off-screen to the right
+    while (tiles.size() < 5 || tiles.back()->x + tiles.back()->width < SCREEN_WIDTH + 400)
     {
-        // meaninng of the rigth cond:
-        // Continue adding tiles as long as the right edge of the last tile
-        // is less than SCREEN_WIDTH + 400, so there are always extra tiles
-        // off-screen to the right for smooth scrolling
-        int lastRight = tiles.empty() ? SCREEN_WIDTH : tiles.back()->x_of_tile + tiles.back()->width_of_tile;
-        int gap_between_tiles = GetRandomValue(100, 150);
-        tiles.push_back(new Tile(lastRight + gap_between_tiles));
+        int lastRight = tiles.empty() ? SCREEN_WIDTH : tiles.back()->x + tiles.back()->width;
+        int gap = GetRandomValue(100, 150);
+        tiles.push_back(new Tile(lastRight + gap));
     }
 }
 
 void Tile::Collision(Player &player, const std::vector<Tile *> &tiles)
 {
-            // --- 1. UPDATE BUFFER ---
-        if (IsKeyPressed(KEY_R))
-        {
-            spaceBuffer.framesLeft = spaceBuffer.maxFrames;
-            cout<<"Max frames aquired\n";
-        }
-        else if (spaceBuffer.framesLeft > 0)
-        {
-            spaceBuffer.framesLeft--;
-            cout<<spaceBuffer.framesLeft<<endl;
-        }
+    // Update bhop buffer for red tile deflection
+    if (IsKeyPressed(KEY_R))
+    {
+        spaceBuffer.framesLeft = spaceBuffer.maxFrames;
+        cout << "Max frames acquired\n";
+    }
+    else if (spaceBuffer.framesLeft > 0)
+    {
+        spaceBuffer.framesLeft--;
+        cout << spaceBuffer.framesLeft << endl;
+    }
 
-    bool collision = false;
-    int overlap;
-    int player_right = player.x + player.width;
-    
+    bool hasCollided = false;
+    int playerRight = player.x + player.width;
 
     for (unsigned int i = 0; i < tiles.size(); i++)
     {
-        Rectangle tile_top = {tiles[i]->x_of_tile, tiles[i]->y_of_tile, tiles[i]->width_of_tile, ((float)tiles[i]->height_of_tile) / 3};
-        Rectangle tile = {tiles[i]->x_of_tile, tiles[i]->y_of_tile, tiles[i]->width_of_tile, tiles[i]->height_of_tile};
+        // Define tile collision areas
+        Rectangle tileTop = {tiles[i]->x, tiles[i]->y, tiles[i]->width, height_of_tile / 3};
+        Rectangle tileRect = {tiles[i]->x, tiles[i]->y, tiles[i]->width, height_of_tile};
 
-        Rectangle non_variant_player_bottom = {player.x, player.y + (float)(2 * player.height) / 3, player.width, player.height / 3};
-        Rectangle non_variant_player_top    = {player.x, player.y, player.width, ((float)2 * player.height) / 3};
+        // Define player collision areas
+        Rectangle playerBottom = {player.x, player.y + (2 * player.height) / 3, player.width, player.height / 3};
+        Rectangle playerTop = {player.x, player.y, player.width, (2 * player.height) / 3};
 
         if (!tiles[i]->variance)
         {
 
-            if (CheckCollisionRecs(non_variant_player_bottom, tile_top))
+            if (CheckCollisionRecs(playerBottom, tileTop))
             {
                 player.inAir = false;
                 tile_number = i + 1;
-                player.y = tiles[i]->y_of_tile - player.height + 1;
+                player.y = tiles[i]->y - player.height + 1;
                 player.y_velocity = 0;
-                collision = true;
+                hasCollided = true;
                 break;
             }
-            else if (CheckCollisionRecs(non_variant_player_top, tile))
+            else if (CheckCollisionRecs(playerTop, tileRect))
             {
-                if (player_right >= tile.x)
+                if (playerRight >= tileRect.x)
                 {
-                    overlap = player_right - tile.x;
-                    player.x = player.x - overlap + 1;
-                    collision = true;
+                    int overlapX = playerRight - tileRect.x;
+                    player.x = player.x - overlapX + 1;
+                    hasCollided = true;
                     break;
                 }
             }
 
-            if (!collision)
+            if (!hasCollided)
             {
                 player.inAir = true;
             }
@@ -133,29 +128,26 @@ void Tile::Collision(Player &player, const std::vector<Tile *> &tiles)
         else
         {
 
-            if (CheckCollisionRecs(non_variant_player_bottom,tile_top))
+            if (CheckCollisionRecs(playerBottom, tileTop))
             {
-                cout<<"collided with tile"<<tile_number<<" ";
-                
-             //   if (player.y + player.height < tiles[i]->y_of_tile+ ((float)tiles[i]->height_of_tile) / 3) // bottom left corner  of player < less then bottom left corner of collidible part of tile
-              //  {
-                    if (spaceBuffer.framesLeft>0)
-                    {
-                         player.y_velocity -= JUMP_HEIGHT;
-                    } 
-                    else
-                    {
-                       player.isGameOver=true;
-                      
-                    }
-               // }
+                cout << "Collided with tile " << tile_number << " ";
+
+                // If bhop buffer active, jump instead of game over
+                if (spaceBuffer.framesLeft > 0)
+                {
+                    player.y_velocity -= JUMP_HEIGHT;
+                }
+                else
+                {
+                    player.isGameOver = true;
+                }
             }
         }
     }
 
+    // Display current tile number
     std::string tileText = std::to_string(tile_number);
-    const char *tile_cstr = tileText.c_str();
-    DrawText(tile_cstr, 20, SCREEN_HEIGHT - 60, 45, WHITE);
+    DrawText(tileText.c_str(), 20, SCREEN_HEIGHT - 60, 45, WHITE);
 }
 void Tile::Cleanup(std::vector<Tile *> &tiles)
 {
@@ -165,35 +157,35 @@ void Tile::Cleanup(std::vector<Tile *> &tiles)
     tiles.clear();
 }
 
-void Tile::Hitbox(Color c,bool variance)
+void Tile::Hitbox(Color c, bool variance)
 {
-    if(!variance)
+    if (!variance)
     {
-         // upper part
-    DrawRectangle(x_of_tile, y_of_tile, width_of_tile, (float)height_of_tile / 3, c);
-    // lower part
-    DrawRectangle(x_of_tile, y_of_tile + (float)height_of_tile / 3, width_of_tile, ((float)2 * height_of_tile) / 3, WHITE);
+        // Upper part (non-collidable)
+        DrawRectangle(x, y, width, height_of_tile / 3, c);
+        // Lower part (collidable)
+        DrawRectangle(x, y + height_of_tile / 3, width, (2 * height_of_tile) / 3, WHITE);
     }
     else
     {
-    // upper part
-    DrawRectangle(x_of_tile, y_of_tile, width_of_tile, (float)height_of_tile / 3, RED);
-    // lower part
-    DrawRectangle(x_of_tile, y_of_tile + (float)height_of_tile / 3, width_of_tile, ((float)2 * height_of_tile) / 3, WHITE);   
+        // Upper part (red for variant)
+        DrawRectangle(x, y, width, height_of_tile / 3, RED);
+        // Lower part
+        DrawRectangle(x, y + height_of_tile / 3, width, (2 * height_of_tile) / 3, WHITE);
     }
-   
 }
 bool Tile::Chance(int percent)
 {
     return GetRandomValue(1, 100) <= percent;
 }
 
-void Tile::WarningText(int tile_number,Player player)
+void Tile::WarningText(int tile_number, Player player)
 {
-    if (tile_number >= VARIENT_SPAWNER)
+    if (tile_number >= VARIANT_SPAWNER)
     {
         static int start_time = -1;
-        if (start_time == -1) start_time = GetTime(); // only set when we first hit VARIENT_SPAWNER
+        if (start_time == -1)
+            start_time = GetTime(); // Set when first reaching variant spawner
 
         double elapsed = GetTime() - start_time;
 

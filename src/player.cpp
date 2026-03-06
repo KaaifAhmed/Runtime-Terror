@@ -5,34 +5,38 @@
 
 using namespace std;
 
+// Draw the player as a simple rectangle
 void Player::Draw()
 {
     DrawRectangle(x, y, width, height, color);
 }
 
+// Draw the hitbox visualization with upper and lower parts
 void Player::Hitbox(Color c)
 {
-    float topHeight    = height * HITBOX_SPLIT;
+    float topHeight = height * HITBOX_SPLIT;
     float bottomHeight = height * (1.0f - HITBOX_SPLIT);
 
-    // upper part (dont go on the platform)
+    // Upper part (non-collidable)
     DrawRectangle(x, y, width, topHeight, WHITE);
 
-    // lower part (go on the plat) — change HITBOX_SPLIT and both halves adjust
+    // Lower part (collidable)
     DrawRectangle(x, y + topHeight, width, bottomHeight, c);
 }
 
-// Returns the bottom (collidable) portion of the player as a Rectangle
-// Always in sync with Hitbox() — both driven by HITBOX_SPLIT
+// Get the collidable bottom rectangle of the player
 Rectangle Player::GetCollisionRect() const
- {
+{
     return { x, y + height * HITBOX_SPLIT, width, height * (1.0f - HITBOX_SPLIT) };
- }
+}
 
- Rectangle Player::GetNonCollisionRect() const
+// Get the non-collidable top rectangle of the player
+Rectangle Player::GetNonCollisionRect() const
 {
     return { x, y, width, height * HITBOX_SPLIT };
 }
+
+// Update player physics: fall, jump, apply velocities
 void Player::Update()
 {
     Fall();
@@ -41,18 +45,26 @@ void Player::Update()
     x += x_velocity;
 }
 
+// Handle falling logic
 void Player::Fall()
 {
-    // STOP FALLING IF ON GROUND
+    if (!isReversed)
+    {
+        x_velocity = TILE_SPEED; // No horizontal movement for now, can be expanded later
+    } else {
+        x_velocity = -1 * TILE_SPEED;
+    }
+    
+    // Stop falling if on ground
     if (y >= GROUND_POS)
     {
         y_velocity = 0;
-        y = GROUND_POS + 5;
+        y = GROUND_POS + 5;  // Slight offset to prevent clipping
         DrawText("LOL NOOB! XD", SCREEN_WIDTH/4, 50, 100, WHITE);
         isGameOver = true;
     }
 
-    // FALL DOWNWARDS IF IN AIR
+    // Apply gravity if in air
     if (inAir)
     {
         delay++;
@@ -61,13 +73,13 @@ void Player::Fall()
             delay = 0;
             y_velocity += GRAVITY;
         }
-        
     }
 }
 
+// Handle jumping logic
 void Player::Jump()
 {
-    // JUMP WHEN SPACE KEY PRESSED
+    // Jump when space is pressed and not in air
     if (IsKeyPressed(KEY_SPACE))
     {
         if (!inAir)
