@@ -78,13 +78,19 @@ void Player::Fall()
 // Handle jumping logic
 void Player::Jump()
 {
-    // Jump when space is pressed and not in air
     if (IsKeyPressed(KEY_SPACE))
     {
-        if (!inAir)
+        if (!inAir) // first jump
         {
             y_velocity -= JUMP_HEIGHT;
             inAir = true;
+            jumpsLeft = 1; // allow one more jump
+        }
+        else if (jumpsLeft > 0) // double jump
+        {
+            y_velocity = 0; // reset velocity first for consistent height
+            y_velocity -= JUMP_HEIGHT;
+            jumpsLeft--;
         }
     }
 }

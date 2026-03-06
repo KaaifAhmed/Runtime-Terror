@@ -17,9 +17,8 @@ Tile::Tile(int startX)
         }
         else if (Chance(20))
         {
-             this->variance = TileType::LOGICAL;
+            this->variance = TileType::LOGICAL;
         }
-        
     }
 
     width = GetRandomValue(200, 500);
@@ -73,19 +72,22 @@ void Tile::Delete_And_Update(std::vector<Tile *> &tiles, float game_speed)
 
 void Tile::New_tiles(std::vector<Tile *> &tiles)
 {
-    // Ensure at least 5 tiles, and always have tiles extending off-screen to the right
     while (tiles.size() < 5 || tiles.back()->x + tiles.back()->width < SCREEN_WIDTH + 400)
     {
         int lastRight = tiles.empty() ? SCREEN_WIDTH : tiles.back()->x + tiles.back()->width;
         int gap = GetRandomValue(100, 150);
-        if (!tiles.empty() && tiles.back()->variance == TileType::SYNTAX)
+
+        if (!tiles.empty())
         {
-            gap = 0; // No gap after a variance tile to prevent pits
+            if (tiles.back()->variance == TileType::SYNTAX)
+                gap = 0;
+            else if (tiles.back()->variance == TileType::LOGICAL)
+                gap = GetRandomValue(40, 60);
         }
-        tiles.push_back(new Tile(lastRight + gap));
+
+        tiles.push_back(new Tile(lastRight + gap)); 
     }
 }
-
 void Tile::Collision(Player &player, const std::vector<Tile *> &tiles)
 {
     // Update bhop buffer for red tile deflection
@@ -120,6 +122,7 @@ void Tile::Collision(Player &player, const std::vector<Tile *> &tiles)
             if (CheckCollisionRecs(playerBottom, tileTop))
             {
                 player.inAir = false;
+                player.jumpsLeft = 0; // reset on landing
                 tile_number = i + 1;
                 player.y = tiles[i]->y - player.height + 1;
                 player.y_velocity = 0;
@@ -165,6 +168,7 @@ void Tile::Collision(Player &player, const std::vector<Tile *> &tiles)
             if (CheckCollisionRecs(playerBottom, tileTop))
             {
                 player.inAir = false;
+                player.jumpsLeft = 0; // reset on landing
                 tile_number = i + 1;
                 player.y = tiles[i]->y - player.height + 1;
                 player.y_velocity = 0;
@@ -197,12 +201,12 @@ void Tile::Collision(Player &player, const std::vector<Tile *> &tiles)
 
     if (hasCollidedBlue)
     {
-        cout<<"value going down";
+        cout << "value going down";
         SmoothCountdown(normal_speed, TILE_SPEED);
     }
-    if(normal_speed==0)
+    if (normal_speed == 0)
     {
-        player.isGameOver=true;
+        player.isGameOver = true;
     }
     // Display current tile number
     std::string tileText = std::to_string(tile_number);
