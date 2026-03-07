@@ -4,8 +4,8 @@
 
 struct PlayerState
 {
-    float x;
-    float y;
+    float posX;
+    float posY;
 };
 
 class RewindBuffer
@@ -32,25 +32,17 @@ public:
         head = (head + 1) % capacity; // Move head forward, wrap around if at end
 
         if (count < capacity)
-        {
-            count++; // Increase count until full
-        }
+            count++;
     }
 
     // Called every frame when the player holds 'Ctrl+Z'
     bool Rewind(PlayerState &outState)
     {
         if (count == 0)
-        {
-            return false; // Nothing left to rewind
-        }
-
-        // Move head backwards, wrapping around properly
+            return false;
         head = (head - 1 + capacity) % capacity;
-
-        outState = buffer[head]; // Retrieve the state
+        outState = buffer[head];
         count--;
-
         return true;
     }
 

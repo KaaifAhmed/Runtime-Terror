@@ -14,7 +14,6 @@ const int GROUND_POS = SCREEN_HEIGHT;
 // PLAYER CONSTANTS
 const int JUMP_HEIGHT = 25;
 
-
 const float PLAYER_START_X = 100;
 const float PLAYER_START_Y = 100;
 
@@ -23,10 +22,12 @@ const float PLAYER_START_Y = 100;
 const float HITBOX_SPLIT = 0.90f;  // bottom 2px out of 100px height
 
 // TILE CONSTANTS
-const int HEIGHT_TILE = 50;
+const int TILE_HEIGHT = 50;
 const float TILE_SPEED = 7;
 const float TILES_START_X = 50;
 const int LEFT_TILES = 10;
-const int VARIANT_SPAWNER=2; // Tile number after which tile can become corrupt
-const int GAME_SPEED_DELAY = 50;
-const float Speed_DELAY_DURATION =1.5f; // so speed of tile will be completely 0 in this many seconds
+const int TILE_Y = 4 * SCREEN_HEIGHT / 5;
+
+const int VARIANT_TILE_INDEX = 2;
+const int SCROLL_SPEED_DELAY = 50;
+const float Speed_DELAY_DURATION = 1.0f;

@@ -5,61 +5,48 @@
 
 using namespace std;
 
-// Draw the player as a simple rectangle
 void Player::Draw()
 {
-    DrawRectangle(x, y, width, height, color);
+    DrawRectangle(posX, posY, playerWidth, playerHeight, color);
 }
 
-// Draw the hitbox visualization with upper and lower parts
+// Draw the hitbox with upper and lower parts
 void Player::Hitbox(Color c)
 {
-    float topHeight = height * HITBOX_SPLIT;
-    float bottomHeight = height * (1.0f - HITBOX_SPLIT);
-
-    // Upper part (non-collidable)
-    DrawRectangle(x, y, width, topHeight, WHITE);
-
-    // Lower part (collidable)
-    DrawRectangle(x, y + topHeight, width, bottomHeight, c);
+    float topRegion = playerHeight * HITBOX_SPLIT;
+    float bottomRegion = playerHeight - topRegion;
+    DrawRectangle(posX, posY, playerWidth, topRegion, WHITE);
+    DrawRectangle(posX, posY + topRegion, playerWidth, bottomRegion, c);
 }
 
-// Get the collidable bottom rectangle of the player
 Rectangle Player::GetCollisionRect() const
 {
-    return { x, y + height * HITBOX_SPLIT, width, height * (1.0f - HITBOX_SPLIT) };
+    return {posX, posY + playerHeight * HITBOX_SPLIT, playerWidth, playerHeight * (1.0f - HITBOX_SPLIT)};
 }
 
-// Get the non-collidable top rectangle of the player
 Rectangle Player::GetNonCollisionRect() const
 {
-    return { x, y, width, height * HITBOX_SPLIT };
+    return {posX, posY, playerWidth, playerHeight * HITBOX_SPLIT};
 }
 
 // Update player physics: fall, jump, apply velocities
 void Player::Update()
 {
+    if (isGameOver)
+        DrawText("NOOB! XD", SCREEN_WIDTH/3, 50, 100, WHITE);
+
     Fall();
     Jump();
-    y += y_velocity;
-    x += x_velocity;
+    posY += velY;
+    posX += velX;
 }
 
-// Handle falling logic
 void Player::Fall()
 {
-    // if (!isReversed)
-    // {
-    //     x_velocity = TILE_SPEED; // No horizontal movement for now, can be expanded later
-    // } else {
-    //     x_velocity = -1 * TILE_SPEED;
-    // }
-    
-    // Stop falling if on ground
-    if (y >= GROUND_POS)
+    if (posY >= GROUND_POS)
     {
-        y_velocity = 0;
-        y = GROUND_POS + 5;  // Slight offset to prevent clipping
+        velY = 0;
+        posY = GROUND_POS + 5;
         isGameOver = true;
     }
 
@@ -70,7 +57,7 @@ void Player::Fall()
         if (delay == GRAVITY_DELAY)
         {
             delay = 0;
-            y_velocity += GRAVITY;
+            velY += GRAVITY;
         }
     }
 }
@@ -80,17 +67,16 @@ void Player::Jump()
 {
     if (IsKeyPressed(KEY_SPACE))
     {
-        if (!inAir) // first jump
+        if (!inAir)
         {
-            y_velocity -= JUMP_HEIGHT;
+            velY -= JUMP_HEIGHT;
             inAir = true;
-            jumpsLeft = 1; // allow one more jump
+            jumpsAvailable = 1;
         }
-        else if (jumpsLeft > 0) // double jump
+        else if (jumpsAvailable > 0)
         {
-            y_velocity = 0; // reset velocity first for consistent height
-            y_velocity -= JUMP_HEIGHT;
-            jumpsLeft--;
+            velY = -JUMP_HEIGHT;
+            jumpsAvailable--;
         }
     }
 }

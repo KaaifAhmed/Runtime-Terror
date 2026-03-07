@@ -5,20 +5,20 @@
 class Player
 {
 public:
+    float posX = PLAYER_START_X;
+    float posY = PLAYER_START_Y;
+    float velY = 0;
+    float velX = 0;
+    int jumpsAvailable = 0;
 
-    float x = PLAYER_START_X, y = PLAYER_START_Y;
-    float y_velocity = 0, x_velocity = 0;
-    int jumpsLeft = 0;
-
-    float height = 100, width = 50;
+    float playerHeight = 100;
+    float playerWidth = 50;
     Color color = WHITE;
 
-    bool isReversed = false; // true if player is currently rewinding
+    bool isRewinding = false;
 
     int delay = 0;
-
     bool inAir = true;
-
     bool isGameOver = false;
 
     Rectangle GetCollisionRect() const;
@@ -28,5 +28,4 @@ public:
     void Update();
     void Fall();
     void Jump();
-   
 };
