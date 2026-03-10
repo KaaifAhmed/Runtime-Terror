@@ -19,7 +19,7 @@ const float PLAYER_START_Y = 100;
 
 // HITBOX SPLIT — fraction of player height where the bottom (collidable) part starts
 // Change this one value and both Hitbox() and collision checks update automatically
-const float HITBOX_SPLIT = 0.90f;  // bottom 2px out of 100px height
+const float HITBOX_SPLIT = 0.90f; // bottom 2px out of 100px height
 
 // TILE CONSTANTS
 const int TILE_HEIGHT = 50;
