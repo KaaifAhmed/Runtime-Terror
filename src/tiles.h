@@ -7,7 +7,7 @@
 struct BhopBuffer
 {
     float framesLeft;
-    const float maxFrames = 30; // 30/60 = 0.5 secs
+    const float maxFrames = 30;
 };
 
 class Tile
@@ -17,8 +17,9 @@ public:
     float tileWidth;
     float tileX;
     float tileY;
+    int snippetStartIndex = 0;
     static constexpr float tileHeight = TILE_HEIGHT;
-    static int currentTileIndex; // Tells which tile the player is currently on
+    static int currentTileIndex;
     static float baseSpeed;
     enum class TileType
     {

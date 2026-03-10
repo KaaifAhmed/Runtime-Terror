@@ -34,7 +34,8 @@ int main()
         if ((IsKeyDown(KEY_Z) && IsKeyDown(KEY_LEFT_CONTROL)) && !player.isGameOver)
         {
             PlayerState restoredState;
-            if (rewindSys.Rewind(restoredState)) {
+            if (rewindSys.Rewind(restoredState))
+            {
                 player.posX = restoredState.posX;
                 player.posY = restoredState.posY;
 
@@ -89,7 +90,7 @@ void drawHitbox()
 
     player.Hitbox(RED);
     for (Tile *t : tiles)
-        t->Hitbox(ORANGE,t->tileType);
+        t->Hitbox(ORANGE, t->tileType);
 }
 
 void drawTiles()
