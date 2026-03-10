@@ -1,6 +1,15 @@
 #pragma once
 #include "raylib.h"
 #include "constants.h"
+#include <queue>
+
+// Define possible buffered actions
+enum class Action {
+    NONE,
+    DASH,
+    JUMP
+};
+
 
 class Player
 {
@@ -21,6 +30,15 @@ public:
     bool inAir = true;
     bool isGameOver = false;
 
+    std::queue<Action> inputQueue;
+    // Dash variables
+    int dashFramesLeft = 0;
+    float dashSpeed = 15.0f;
+    int dashCharges = 0;
+    float timeSinceLastDashRecharge = 0.0f;
+
+
+
     Rectangle GetCollisionRect() const;
     Rectangle GetNonCollisionRect() const;
     void Draw();
@@ -28,4 +46,5 @@ public:
     void Update();
     void Fall();
     void Jump();
+    void Reset();
 };

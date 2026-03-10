@@ -6,7 +6,9 @@ struct PlayerState
 {
     float posX;
     float posY;
+    bool isSliding;
 };
+
 
 class RewindBuffer
 {
@@ -47,4 +49,10 @@ public:
     }
 
     int GetCount() { return count; }
+
+    void Reset()
+    {
+        head = 0;
+        count = 0;
+    }
 };

@@ -1,10 +1,15 @@
 #include "tiles.h"
 #include "constants.h"
+#include "graph.h"
 #include <string>
 #include <iostream>
 using namespace std;
 
+extern TeleportGraph portalNetwork;
+bool inDarkWorld = false;
+
 int Tile::currentTileIndex = 0;
+
 float Tile::baseSpeed = TILE_SPEED;
 BhopBuffer Tile::bhopBuffer;
 
@@ -51,14 +56,14 @@ void Tile::Delete_And_Update(std::vector<Tile *> &tiles, float gameSpeed)
     }
 
     // If too many tiles accumulated, delete old ones to save memory
-    if (currentTileIndex >= LEFT_TILES)
+    if (tiles.size() > LEFT_TILES)
     {
         for (int i = 1; i >= 0; i--)
         {
             delete tiles[i];
+
             tiles.erase(tiles.begin() + i);
         }
-        currentTileIndex -= 2;
     }
 }
 
@@ -76,6 +81,13 @@ void Tile::New_tiles(std::vector<Tile *> &tiles)
                 gap = 0;
             else if (tiles.back()->tileType == TileType::LOGICAL)
                 gap = GetRandomValue(40, 60);
+            
+            // 5% chance to spawn a portal network connection
+            else if (GetRandomValue(1, 100) <= 5 && tiles.back()->tileType == TileType::NORMAL) {
+                 float heightA = TILE_Y - GetRandomValue(150, 300);
+                 float heightB = TILE_Y - GetRandomValue(150, 400);
+                 portalNetwork.SpawnPair(lastRight + gap, heightA, heightB);
+            }
         }
         tiles.push_back(new Tile(lastRight + gap));
     }
@@ -84,10 +96,11 @@ void Tile::New_tiles(std::vector<Tile *> &tiles)
 void Tile::Collision(Player &player, const std::vector<Tile *> &tiles)
 {
     // Update bhop buffer for red tile deflection
-    if (IsKeyPressed(KEY_R))
+    if (IsKeyDown(KEY_R))
     {
         bhopBuffer.framesLeft = bhopBuffer.maxFrames;
     }
+
     else if (bhopBuffer.framesLeft > 0)
     {
         bhopBuffer.framesLeft--;
@@ -95,9 +108,43 @@ void Tile::Collision(Player &player, const std::vector<Tile *> &tiles)
     bool landedOnNormal = false;
     bool landedOnLogical = false;
     int playerRightEdge = player.posX + player.playerWidth;
+
+    // Check Graph Teleportation first
+    for (auto it = portalNetwork.GetNodes().begin(); it != portalNetwork.GetNodes().end(); ++it) {
+        Rectangle nodeRect = {it->posX, it->posY, it->width, it->height};
+        if (CheckCollisionRecs(player.GetCollisionRect(), nodeRect) || 
+            CheckCollisionRecs(player.GetNonCollisionRect(), nodeRect)) {
+            
+            // RNG 50/50 Roll
+            if (GetRandomValue(1, 100) <= 50) {
+                // Success!
+                currentTileIndex += 4; // Add 4 score
+                
+                // Change world color
+                inDarkWorld = !inDarkWorld;
+                
+                // Pop player up slightly so they don't hit the ground immediately
+                player.velY = -JUMP_HEIGHT; 
+
+                player.dashFramesLeft = 0; 
+                
+                // Despawn this specific portal so it can't be hit twice
+                // (Using a quick hack to push it offscreen for CleanUp to catch it)
+                const_cast<TerminalNode&>(*it).posX = -1000.0f; 
+                
+            } else {
+                // Failure - Fall into the void
+                player.isGameOver = true;
+            }
+            break; // Only process one portal collision per frame
+        }
+    }
+
+
     for (size_t i = 0; i < tiles.size(); i++)
     {
         Rectangle tileTop = {tiles[i]->tileX, tiles[i]->tileY, tiles[i]->tileWidth, tileHeight / 3};
+
         Rectangle tileRect = {tiles[i]->tileX, tiles[i]->tileY, tiles[i]->tileWidth, tileHeight};
         Rectangle playerBottom = {player.posX, player.posY + (2 * player.playerHeight) / 3, player.playerWidth, player.playerHeight / 3};
         Rectangle playerTop = {player.posX, player.posY, player.playerWidth, (2 * player.playerHeight) / 3};
@@ -108,12 +155,20 @@ void Tile::Collision(Player &player, const std::vector<Tile *> &tiles)
             {
                 player.inAir = false;
                 player.jumpsAvailable = 0;
-                currentTileIndex = i + 1;
+                
+                // Only increment score if moving forward to new tiles
+                static Tile* lastLandedTile = nullptr;
+                if (lastLandedTile != tiles[i]) {
+                    currentTileIndex++;
+                    lastLandedTile = tiles[i];
+                }
+
                 player.posY = tiles[i]->tileY - player.playerHeight + 1;
                 player.velY = 0;
                 landedOnNormal = true;
                 break;
             }
+
             else if (CheckCollisionRecs(playerTop, tileRect))
             {
                 if (playerRightEdge >= tileRect.x)
@@ -131,7 +186,8 @@ void Tile::Collision(Player &player, const std::vector<Tile *> &tiles)
             {
                 if (bhopBuffer.framesLeft > 0)
                 {
-                    player.velY -= JUMP_HEIGHT * 2;
+                    // Instead of subtracting, explicitly set height so spamming doesn't stack
+                    player.velY = -JUMP_HEIGHT * 1.5f;
                     bhopBuffer.framesLeft = 0;
                     player.inAir = true;
                 }
@@ -148,12 +204,19 @@ void Tile::Collision(Player &player, const std::vector<Tile *> &tiles)
             {
                 player.inAir = false;
                 player.jumpsAvailable = 0;
-                currentTileIndex = i + 1;
+
+                static Tile* lastLandedTileLog = nullptr;
+                if (lastLandedTileLog != tiles[i]) {
+                    currentTileIndex++;
+                    lastLandedTileLog = tiles[i];
+                }
+
                 player.posY = tiles[i]->tileY - player.playerHeight + 1;
                 player.velY = 0;
                 landedOnLogical = true;
                 break;
             }
+
             else if (CheckCollisionRecs(playerTop, tileRect))
             {
                 if (playerRightEdge >= tileRect.x)
