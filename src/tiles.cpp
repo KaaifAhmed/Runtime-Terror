@@ -8,6 +8,20 @@ int Tile::currentTileIndex = 0;
 float Tile::baseSpeed = TILE_SPEED;
 BhopBuffer Tile::bhopBuffer;
 
+// Code snippets for tiles
+const char* codeSnippets[] = {
+    "int x = 0;",
+    "float y = 1.5;",
+    "bool flag = true;",
+    "return 0;",
+    "if (valid)",
+    "while (true)",
+    "for (int i=0;)",
+    "void* ptr;",
+    "class Foo {}",
+    "std::vector<>"
+};
+
 Tile::Tile(int startX)
 {
     if (currentTileIndex >= VARIANT_TILE_INDEX)
@@ -24,12 +38,36 @@ Tile::Tile(int startX)
 
 void Tile::Draw(TileType type)
 {
-    Color tileColor = WHITE;
-    if (type == TileType::SYNTAX)
-        tileColor = RED;
-    else if (type == TileType::LOGICAL)
-        tileColor = BLUE;
+    // VS Code dark theme colors for tiles
+    Color tileColor;
+    Color textColor;
+    
+    if (type == TileType::SYNTAX) {
+        tileColor = {244, 71, 71, 255};    // Red error
+        textColor = WHITE;
+    }
+    else if (type == TileType::LOGICAL) {
+        tileColor = {0, 122, 204, 255};    // Blue
+        textColor = WHITE;
+    }
+    else {
+        tileColor = {37, 37, 38, 255};     // VS Code sidebar dark
+        textColor = {212, 212, 212, 255};  // Light gray text
+    }
+    
+    // Draw tile background
     DrawRectangle(tileX, tileY, tileWidth, tileHeight, tileColor);
+    
+    // Draw border like code editor line
+    DrawRectangleLines(tileX, tileY, tileWidth, tileHeight, {60, 60, 60, 255});
+    
+    // Draw line number on left side
+    string lineNum = to_string(currentTileIndex + 1);
+    DrawText(lineNum.c_str(), tileX + 5, tileY + 12, 15, {100, 100, 100, 255});
+    
+    // Draw code text
+    int randomCodeIndex = GetRandomValue(0, 9);
+    DrawText(codeSnippets[randomCodeIndex], tileX + 35, tileY + 10, 20, textColor);
 }
 
 bool Tile::Update(float gameSpeed)
