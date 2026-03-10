@@ -10,8 +10,15 @@ enum class Action {
     JUMP
 };
 
+enum class DeathCause {
+    NONE,
+    VOID_FALL,
+    SYNTAX_ERROR,
+    PORTAL_GAMBLE
+};
 
 class Player
+
 {
 public:
     float posX = PLAYER_START_X;
@@ -29,6 +36,7 @@ public:
     int delay = 0;
     bool inAir = true;
     bool isGameOver = false;
+    DeathCause causeOfDeath = DeathCause::NONE;
 
     std::queue<Action> inputQueue;
     // Dash variables

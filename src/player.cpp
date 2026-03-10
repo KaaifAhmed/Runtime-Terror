@@ -111,6 +111,7 @@ void Player::Fall()
         velY = 0;
         posY = GROUND_POS + 5;
         isGameOver = true;
+        causeOfDeath = DeathCause::VOID_FALL;
     }
 
     // Apply gravity if in air
@@ -154,6 +155,7 @@ void Player::Reset()
     delay = 0;
     inAir = true;
     isGameOver = false;
+    causeOfDeath = DeathCause::NONE;
     dashFramesLeft = 0;
     dashCharges = 0;
     timeSinceLastDashRecharge = 0.0f;

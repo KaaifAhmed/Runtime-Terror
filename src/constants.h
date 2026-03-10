@@ -25,7 +25,7 @@ const float HITBOX_SPLIT = 0.90f;  // bottom 2px out of 100px height
 const int TILE_HEIGHT = 50;
 const float TILE_SPEED = 7;
 const float TILES_START_X = PLAYER_START_X - 50;
-const int LEFT_TILES = 10;
+const int LEFT_TILES = 50;
 
 const int TILE_Y = 4 * SCREEN_HEIGHT / 5;
 

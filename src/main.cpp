@@ -28,7 +28,8 @@ void updateTiles(float scrollSpeed);
 enum class GameState {
     MENU,
     PLAYING,
-    HIGHSCORES
+    HIGHSCORES,
+    HOWTOPLAY
 };
 
 std::vector<int> loadScores() {
@@ -89,7 +90,8 @@ int main()
                 DrawText("RUNTIME TERROR", SCREEN_WIDTH / 2 - 340, SCREEN_HEIGHT / 4, 80, MAROON);
                 DrawText("1. Play Game", SCREEN_WIDTH / 2 - 100, SCREEN_HEIGHT / 2, 30, WHITE);
                 DrawText("2. Highest Scores", SCREEN_WIDTH / 2 - 120, SCREEN_HEIGHT / 2 + 50, 30, WHITE);
-                DrawText("3. Exit", SCREEN_WIDTH / 2 - 60, SCREEN_HEIGHT / 2 + 100, 30, WHITE);
+                DrawText("3. How to play", SCREEN_WIDTH / 2 - 100, SCREEN_HEIGHT / 2 + 100, 30, WHITE);
+                DrawText("4. Exit", SCREEN_WIDTH / 2 - 60, SCREEN_HEIGHT / 2 + 150, 30, WHITE);
 
                 if (IsKeyPressed(KEY_ONE) || IsKeyPressed(KEY_KP_1)) {
                     currentState = GameState::PLAYING;
@@ -108,8 +110,27 @@ int main()
                 } else if (IsKeyPressed(KEY_TWO) || IsKeyPressed(KEY_KP_2)) {
                     currentState = GameState::HIGHSCORES;
                 } else if (IsKeyPressed(KEY_THREE) || IsKeyPressed(KEY_KP_3)) {
+                    currentState = GameState::HOWTOPLAY;
+                } else if (IsKeyPressed(KEY_FOUR) || IsKeyPressed(KEY_KP_4)) {
                     CloseWindow();
                     return 0;
+                }
+                break;
+            }
+            case GameState::HOWTOPLAY: {
+                ClearBackground(DARKBLUE);
+                DrawText("HOW TO PLAY", SCREEN_WIDTH / 2 - 150, 100, 50, SKYBLUE);
+                
+                DrawText("- Press SPACE to Jump. You can DOUBLE JUMP while in the air.", 100, 250, 30, WHITE);
+                DrawText("- Press LEFT SHIFT to Dash forward if you have Dash Charges.", 100, 320, 30, WHITE);
+                DrawText("- Dash Charges regenerate every 5 seconds infinitely.", 100, 390, 30, WHITE);
+                DrawText("- Avoid RED (Syntax) Tiles! Press 'R' to bounce off them if needed.", 100, 460, 30, RED);
+                DrawText("- BLUE (Logical) Tiles are safe but they slow the game down.", 100, 530, 30, BLUE);
+                DrawText("- Hit a Green Portal for a 50% chance to enter the Alternate Dimension!", 100, 600, 30, GREEN);
+                DrawText("- Press ESC anywhere to return to Menu.", 100, 750, 30, LIGHTGRAY);
+                
+                if (IsKeyPressed(KEY_ESCAPE)) {
+                    currentState = GameState::MENU;
                 }
                 break;
             }
@@ -208,8 +229,18 @@ int main()
 
                     
                     if (player.isGameOver) {
-                        DrawRectangle(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, Fade(BLACK, 0.7f)); // Dims the background
-                        DrawText("Press Space to Restart\n\nPress ESC for Menu", SCREEN_WIDTH / 2 - 300, SCREEN_HEIGHT / 2 - 50, 50, WHITE);
+                        DrawRectangle(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, Fade(BLACK, 0.85f)); // Darker dim for more text visibility
+                        
+                        // Print dynamic death message based on causeOfDeath tracking
+                        if (player.causeOfDeath == DeathCause::VOID_FALL) {
+                            DrawText("You jumped into the void lol", SCREEN_WIDTH / 2 - 250, SCREEN_HEIGHT / 3 - 50, 40, RED);
+                        } else if (player.causeOfDeath == DeathCause::SYNTAX_ERROR) {
+                            DrawText("Syntax Error: Fatal Collision", SCREEN_WIDTH / 2 - 300, SCREEN_HEIGHT / 3 - 50, 40, RED);
+                        } else if (player.causeOfDeath == DeathCause::PORTAL_GAMBLE) {
+                            DrawText("Portal Gamble: You lost the 50/50...", SCREEN_WIDTH / 2 - 350, SCREEN_HEIGHT / 3 - 50, 40, PURPLE);
+                        }
+                        
+                        DrawText("Press Space to Restart\n\nPress ESC for Menu", SCREEN_WIDTH / 2 - 300, SCREEN_HEIGHT / 2, 50, WHITE);
                         if (IsKeyPressed(KEY_ESCAPE)) {
                             currentState = GameState::MENU;
                             scoreSaved = false;

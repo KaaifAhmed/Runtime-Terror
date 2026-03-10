@@ -15,14 +15,24 @@ BhopBuffer Tile::bhopBuffer;
 
 Tile::Tile(int startX)
 {
-    if (currentTileIndex >= VARIANT_TILE_INDEX)
-    {
-        if (Chance(30))
-            tileType = TileType::SYNTAX;
-        else if (Chance(20))
-            tileType = TileType::LOGICAL;
+    if (inDarkWorld) {
+        // Dark World uses extremely narrow and dangerous platforms
+        if (currentTileIndex >= VARIANT_TILE_INDEX) {
+            if (Chance(60)) tileType = TileType::SYNTAX;
+            else if (Chance(15)) tileType = TileType::LOGICAL;
+        }
+        tileWidth = GetRandomValue(50, 150);
+    } else {
+        // Normal World
+        if (currentTileIndex >= VARIANT_TILE_INDEX)
+        {
+            if (Chance(30))
+                tileType = TileType::SYNTAX;
+            else if (Chance(20))
+                tileType = TileType::LOGICAL;
+        }
+        tileWidth = GetRandomValue(200, 500);
     }
-    tileWidth = GetRandomValue(200, 500);
     tileX = startX;
     tileY = TILE_Y;
 }
@@ -34,7 +44,36 @@ void Tile::Draw(TileType type)
         tileColor = RED;
     else if (type == TileType::LOGICAL)
         tileColor = BLUE;
-    DrawRectangle(tileX, tileY, tileWidth, tileHeight, tileColor);
+
+    if (inDarkWorld) {
+        if (type == TileType::SYNTAX) {
+            // Draw a base rectangle with dangerous spikes on top
+            DrawRectangle(tileX, tileY + 20, tileWidth, tileHeight - 20, tileColor);
+            int spikeWidth = 20;
+            int numSpikes = tileWidth / spikeWidth;
+            for (int i = 0; i < numSpikes; i++) {
+                Vector2 v1 = {(float)tileX + i * spikeWidth + spikeWidth / 2.0f, (float)tileY}; // Top tip
+                Vector2 v2 = {(float)tileX + i * spikeWidth, (float)tileY + 20.0f}; // Bottom left
+                Vector2 v3 = {(float)tileX + (i + 1) * spikeWidth, (float)tileY + 20.0f}; // Bottom right
+                DrawTriangle(v1, v2, v3, tileColor);
+            }
+            if ((int)tileWidth % spikeWidth != 0) {
+                float remainder = (int)tileWidth % spikeWidth;
+                Vector2 v1 = {(float)tileX + numSpikes * spikeWidth + remainder / 2.0f, (float)tileY};
+                Vector2 v2 = {(float)tileX + numSpikes * spikeWidth, (float)tileY + 20.0f};
+                Vector2 v3 = {(float)tileX + tileWidth, (float)tileY + 20.0f};
+                DrawTriangle(v1, v2, v3, tileColor);
+            }
+        } else if (type == TileType::LOGICAL) {
+            // Draw logic tiles as smooth pill shapes
+            DrawRectangleRounded({(float)tileX, (float)tileY, (float)tileWidth, (float)tileHeight}, 0.5f, 10, tileColor);
+        } else {
+            // Normal platforms are a darker gray
+            DrawRectangle(tileX, tileY, tileWidth, tileHeight, DARKGRAY);
+        }
+    } else {
+        DrawRectangle(tileX, tileY, tileWidth, tileHeight, tileColor);
+    }
 }
 
 bool Tile::Update(float gameSpeed)
@@ -73,6 +112,7 @@ void Tile::New_tiles(std::vector<Tile *> &tiles)
     while (tiles.size() < 5 || tiles.back()->tileX + tiles.back()->tileWidth < SCREEN_WIDTH + 400)
     {
         int lastRight = tiles.empty() ? SCREEN_WIDTH : tiles.back()->tileX + tiles.back()->tileWidth;
+        
         int gap = GetRandomValue(100, 150);
 
         if (!tiles.empty())
@@ -135,6 +175,7 @@ void Tile::Collision(Player &player, const std::vector<Tile *> &tiles)
             } else {
                 // Failure - Fall into the void
                 player.isGameOver = true;
+                player.causeOfDeath = DeathCause::PORTAL_GAMBLE;
             }
             break; // Only process one portal collision per frame
         }
@@ -169,14 +210,13 @@ void Tile::Collision(Player &player, const std::vector<Tile *> &tiles)
                 break;
             }
 
-            else if (CheckCollisionRecs(playerTop, tileRect))
+            else if (CheckCollisionRecs(playerTop, tileRect) || CheckCollisionRecs(playerBottom, tileRect))
             {
-                if (playerRightEdge >= tileRect.x)
+                if (playerRightEdge >= tileRect.x && player.posX <= tileRect.x)
                 {
                     int overlapX = playerRightEdge - tileRect.x;
                     player.posX = player.posX - overlapX + 1;
-                    landedOnNormal = true;
-                    break;
+                    // Dont count as landed so they fall if they only hit the side
                 }
             }
         }
@@ -194,6 +234,7 @@ void Tile::Collision(Player &player, const std::vector<Tile *> &tiles)
                 else
                 {
                     player.isGameOver = true;
+                    player.causeOfDeath = DeathCause::SYNTAX_ERROR;
                 }
                 break;
             }
@@ -217,14 +258,13 @@ void Tile::Collision(Player &player, const std::vector<Tile *> &tiles)
                 break;
             }
 
-            else if (CheckCollisionRecs(playerTop, tileRect))
+            else if (CheckCollisionRecs(playerTop, tileRect) || CheckCollisionRecs(playerBottom, tileRect))
             {
-                if (playerRightEdge >= tileRect.x)
+                if (playerRightEdge >= tileRect.x && player.posX <= tileRect.x)
                 {
                     int overlapX = playerRightEdge - tileRect.x;
                     player.posX = player.posX - overlapX + 1;
-                    landedOnLogical = true;
-                    break;
+                    // Dont count as landed so they fall
                 }
             }
         }
@@ -237,8 +277,10 @@ void Tile::Collision(Player &player, const std::vector<Tile *> &tiles)
     }
     if (landedOnLogical)
         SmoothCountdown(baseSpeed, TILE_SPEED);
-    if (baseSpeed == 0)
+    if (baseSpeed == 0) {
         player.isGameOver = true;
+        player.causeOfDeath = DeathCause::VOID_FALL; // Ran out of time on logical tile = void fall
+    }
     std::string tileText = std::to_string(currentTileIndex);
     DrawText(tileText.c_str(), 20, SCREEN_HEIGHT - 60, 45, WHITE);
 }

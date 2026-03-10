@@ -1,0 +1,17 @@
+mingw32-make game
+make[1]: Entering directory 'E:/University projects/Runtime-Terror'
+g++ -o game src/*.cpp -Wall -std=c++14 -D_DEFAULT_SOURCE -Wno-missing-braces -g -O0 C:/raylib/raylib/src/raylib.rc.data -I. -IC:/raylib/raylib/src -IC:/raylib/raylib/src/external -L. -LC:/raylib/raylib/src -LC:/raylib/raylib/src -lraylib -lopengl32 -lgdi32 -lwinmm -DPLATFORM_DESKTOP
+src/tiles.cpp: In member function 'void Tile::Draw(TileType)':
+src/tiles.cpp:60:27: error: invalid operands of types 'float' and 'int' to binary 'operator%'
+   60 |             if (tileWidth % spikeWidth != 0) {
+      |                 ~~~~~~~~~ ^ ~~~~~~~~~~
+      |                 |           |
+      |                 float       int
+src/tiles.cpp:61:45: error: invalid operands of types 'float' and 'int' to binary 'operator%'
+   61 |                 float remainder = tileWidth % spikeWidth;
+      |                                   ~~~~~~~~~ ^ ~~~~~~~~~~
+      |                                   |           |
+      |                                   float       int
+make[1]: *** [Makefile:376: game] Error 1
+make[1]: Leaving directory 'E:/University projects/Runtime-Terror'
+make: *** [Makefile:372: all] Error 2
