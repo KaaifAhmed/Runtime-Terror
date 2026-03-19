@@ -80,3 +80,10 @@ void Player::Jump()
         }
     }
 }
+void Player::ReduceRewind(float &rewind_time_left, float total_rewind_time)
+{
+      float rate = total_rewind_time / REWIND_DURATION;
+    rewind_time_left -= rate * GetFrameTime();
+    if (rewind_time_left < 0)
+        rewind_time_left = 0;  
+}

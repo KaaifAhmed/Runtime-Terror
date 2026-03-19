@@ -464,7 +464,7 @@ void Tile::Collision(Player &player, const std::vector<Tile *> &tiles)
                 }
             }
         }
-        else if (tiles[i]->tileType == TileType::SYNTAX)
+        else if (tiles[i]->tileType == TileType::SYNTAX&&!player.isRewinding)
         {
             if (CheckCollisionRecs(playerBottom, tileTop))
             {
@@ -481,7 +481,7 @@ void Tile::Collision(Player &player, const std::vector<Tile *> &tiles)
                 break;
             }
         }
-        else if (tiles[i]->tileType == TileType::LOGICAL)
+        else if (tiles[i]->tileType == TileType::LOGICAL&&!player.isRewinding)
         {
             if (CheckCollisionRecs(playerBottom, tileTop))
             {

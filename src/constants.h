@@ -17,6 +17,8 @@ const int JUMP_HEIGHT = 25;
 const float PLAYER_START_X = 100;
 const float PLAYER_START_Y = 100;
 
+const float REWIND_DURATION=5;
+
 // HITBOX SPLIT — fraction of player height where the bottom (collidable) part starts
 // Change this one value and both Hitbox() and collision checks update automatically
 const float HITBOX_SPLIT = 0.90f; // bottom 2px out of 100px height
@@ -31,3 +33,4 @@ const int TILE_Y = 4 * SCREEN_HEIGHT / 5;
 const int VARIANT_TILE_INDEX = 2;
 const int SCROLL_SPEED_DELAY = 50;
 const float Speed_DELAY_DURATION = 1.0f;
+
