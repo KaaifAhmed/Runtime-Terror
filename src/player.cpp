@@ -5,6 +5,42 @@
 
 using namespace std;
 
+
+float Player::jumpSoundVolumn=0.1f;
+float Player::rewindSoundVolumn=0.5f;
+float Player::fallingDownSoundVolumn=1.0f;
+// Call this after InitAudioDevice()
+void Player::Init()
+{
+    jumpSound = LoadSound("sounds\\jump.wav");
+    SetSoundVolume(jumpSound, jumpSoundVolumn);
+    
+    rewindSound=LoadSound("sounds\\Time_rewind_sound.mp3");
+    SetSoundVolume(rewindSound,rewindSoundVolumn);
+
+    fallingDownSound=LoadSound("sounds\\falling_down_sound2.mp3");
+     SetSoundVolume(fallingDownSound,fallingDownSoundVolumn);
+
+
+}
+
+void Player::Cleanup()
+{
+    if (jumpSound.frameCount > 0) // frameCount checks if the sound was properly initialized,
+    {
+        UnloadSound(jumpSound); // otherwise we would be unloading a sound that never existed
+    }
+
+    if (rewindSound.frameCount > 0)
+    {
+        UnloadSound(rewindSound);
+    }
+
+    if(fallingDownSound.frameCount>0)
+    {
+        UnloadSound(fallingDownSound);
+    }
+}
 void Player::Draw()
 {
     DrawRectangle(posX, posY, playerWidth, playerHeight, color);
@@ -47,7 +83,12 @@ void Player::Fall()
     {
         velY = 0;
         posY = GROUND_POS + 5;
+        if(!isGameOver)
+        {
+            PlaySound(fallingDownSound);
+        }
         isGameOver = true;
+       
     }
 
     // Apply gravity if in air
@@ -72,17 +113,20 @@ void Player::Jump()
             velY -= JUMP_HEIGHT;
             inAir = true;
             jumpsAvailable = 1;
+            PlaySound(jumpSound);
         }
         else if (jumpsAvailable > 0)
         {
             velY = -JUMP_HEIGHT;
             jumpsAvailable--;
+            PlaySound(jumpSound);
         }
     }
 }
+
 void Player::ReduceRewind(float &rewind_time_left, float total_rewind_time)
 {
-      float rate = total_rewind_time / REWIND_DURATION;
+    float rate = total_rewind_time / REWIND_DURATION;
     rewind_time_left -= rate * GetFrameTime();
     if (rewind_time_left < 0)
         rewind_time_left = 0;  

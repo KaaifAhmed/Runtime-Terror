@@ -10,13 +10,16 @@ struct Pickup
     float x, y;
     float size = 16;
     bool collected = false;
-    
+    static float collectingSoundvolumn;
+    static Sound collectingSound;
 
     Pickup(float x, float y) : x(x), y(y) {}
 
     void Update(float scrollSpeed, float baseSpeed);
     void Draw() const;
     bool CheckCollect(Player &player); // returns true if just collected
+    static void Init();
+    static void Cleanup();
 };
 
 namespace Pickups

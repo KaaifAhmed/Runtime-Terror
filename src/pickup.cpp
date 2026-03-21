@@ -9,9 +9,27 @@ static const float PICKUP_HOVER = 40.0f;
 // Chance (1-100) per tile that a pickup spawns above it
 static const int PICKUP_CHANCE = 50;
 
+// Define the static member — required for static variables
+Sound Pickup::collectingSound = {};
+float Pickup::collectingSoundvolumn=0.2f;
+
 void Pickup::Update(float scrollSpeed, float baseSpeed)
 {
     x -= baseSpeed + scrollSpeed;
+}
+
+// Call this after InitAudioDevice()
+void Pickup::Init()
+{
+    collectingSound = LoadSound("sounds\\powerUp.wav");
+    SetSoundVolume(collectingSound,collectingSoundvolumn);
+}
+
+// Call this before CloseAudioDevice()
+void Pickup::Cleanup()
+{
+    if (collectingSound.frameCount > 0)
+        UnloadSound(collectingSound);
 }
 
 void Pickup::Draw() const
@@ -38,7 +56,7 @@ bool Pickup::CheckCollect(Player &player)
     if (CheckCollisionRecs(pRect, myRect))
     {
         collected = true;
-
+        PlaySound(collectingSound);
         if (player.Rewind_time_left < REWIND_SECS)
             player.Rewind_time_left += 1.0f;
         return true;
@@ -46,7 +64,6 @@ bool Pickup::CheckCollect(Player &player)
     return false;
 }
 
-// ── Namespace helpers ────────────────────────────────────────────────────────
 
 // Track which tiles have already been considered for a pickup, by pointer
 static std::vector<Tile *> spawnedForTile;

@@ -5,13 +5,13 @@
 #include <vector>
 #include "tiles.h"
 #include "rewind.h"
-#include "pickup.h"              // ← ADD
+#include "pickup.h"
 
 using namespace std;
 
 Player player;
 vector<Tile *> tiles;
-vector<Pickup> pickups;          // ← ADD
+vector<Pickup> pickups;
 float scrollSpeed = 0;
 
 // Function declarations
@@ -25,22 +25,37 @@ int main()
     RewindBuffer rewindSys(REWIND_SECS * FPS);
     tiles.push_back(new Tile(TILES_START_X));
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Runtime Terror");
+
+    InitAudioDevice(); //  1. Init audio first
+    player.Init();     //  2. Then load sounds
+    Pickup::Init();
+    Tile::Init();
+    Music music = LoadMusicStream("src\\game_music.mp3");
+    PlayMusicStream(music);
+
     SetTargetFPS(FPS);
+
     player.Rewind_time_left = 5;
 
     while (!WindowShouldClose())
     {
         BeginDrawing();
+        // IMPORTANT: Call every frame to keep music streaming
+        UpdateMusicStream(music);
 
         // Use 0.05f instead of 0 — float subtraction never lands exactly on 0,
         // so we treat anything below this epsilon as empty
         if ((IsKeyDown(KEY_Z) && IsKeyDown(KEY_LEFT_CONTROL)) && !player.isGameOver && player.Rewind_time_left > 0.05f)
         {
+            // Only play when rewind just starts, not every frame
+            if (!player.isRewinding)
+                PlaySound(player.rewindSound); //  fires once on first frame
+
             PlayerState restoredState;
             if (rewindSys.Rewind(restoredState))
             {
                 Player::ReduceRewind(player.Rewind_time_left, REWIND_DURATION);
-                cout << player.Rewind_time_left << endl;
+
                 player.posX = restoredState.posX;
                 player.posY = restoredState.posY;
 
@@ -63,6 +78,9 @@ int main()
         }
         else
         {
+            if (player.isRewinding)
+                StopSound(player.rewindSound);
+
             PlayerState currentState = {player.posX, player.posY};
             rewindSys.Record(currentState);
 
@@ -75,7 +93,7 @@ int main()
             {
                 updateTiles(scrollSpeed);
 
-                // ← ADD: spawn + update + draw pickups
+                // spawn + update + draw pickups
                 Pickups::SpawnIfNeeded(pickups, tiles);
                 Pickups::UpdateAll(pickups, player, scrollSpeed, Tile::baseSpeed);
             }
@@ -90,7 +108,11 @@ int main()
         EndDrawing();
     }
 
-    Tile::Cleanup(tiles);
+    UnloadMusicStream(music);
+    player.Cleanup(); //  Unload sounds before closing audio
+    Pickup::Cleanup();
+    Tile::CleanupTiles(tiles);
+    CloseAudioDevice(); //  Close audio device
     CloseWindow();
 }
 
@@ -117,33 +139,36 @@ void updateTiles(float scrollSpeed)
 
 void drawRewindBar(float rewindTimeLeft)
 {
-    const int BAR_X      = 20;
-    const int BAR_Y      = SCREEN_HEIGHT - 50;
-    const int BAR_WIDTH  = 250;
+    const int BAR_X = 20;
+    const int BAR_Y = SCREEN_HEIGHT - 50;
+    const int BAR_WIDTH = 250;
     const int BAR_HEIGHT = 24;
-    const int BORDER     = 2;
+    const int BORDER = 2;
 
     // Background track
     DrawRectangle(BAR_X - BORDER, BAR_Y - BORDER,
                   BAR_WIDTH + BORDER * 2, BAR_HEIGHT + BORDER * 2,
-                  { 60, 60, 60, 255 });
-    DrawRectangle(BAR_X, BAR_Y, BAR_WIDTH, BAR_HEIGHT, { 20, 20, 20, 255 });
+                  {60, 60, 60, 255});
+    DrawRectangle(BAR_X, BAR_Y, BAR_WIDTH, BAR_HEIGHT, {20, 20, 20, 255});
 
     // Filled portion — cyan when healthy, orange when low
     float fraction = rewindTimeLeft / (float)REWIND_SECS;
-    if (fraction < 0) fraction = 0;
-    if (fraction > 1) fraction = 1;
+    if (fraction < 0)
+        fraction = 0;
+    if (fraction > 1)
+        fraction = 1;
     int fillWidth = (int)(BAR_WIDTH * fraction);
 
-    Color fillColor = (fraction > 0.3f) ? Color{ 0, 210, 210, 255 }
-                                        : Color{ 255, 140, 0, 255 };
+    Color fillColor = (fraction > 0.3f) ? Color{0, 210, 210, 255}
+                                        : Color{255, 140, 0, 255};
     if (fillWidth > 0)
         DrawRectangle(BAR_X, BAR_Y, fillWidth, BAR_HEIGHT, fillColor);
 
     // Label
-    DrawText("REWIND", BAR_X, BAR_Y - 20, 16, { 180, 180, 180, 255 });
+    DrawText("REWIND", BAR_X, BAR_Y - 20, 16, {180, 180, 180, 255});
 
     // Seconds remaining
-    string timeStr = to_string((int)rewindTimeLeft) + "s";
-    DrawText(timeStr.c_str(), BAR_X + BAR_WIDTH + 8, BAR_Y + 4, 16, { 180, 180, 180, 255 });
+    char timeStr[16];
+    sprintf(timeStr, "%.1f s", rewindTimeLeft);
+    DrawText(timeStr, BAR_X + BAR_WIDTH + 8, BAR_Y + 4, 16, {180, 180, 180, 255});
 }

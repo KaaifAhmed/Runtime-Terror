@@ -9,10 +9,10 @@ public:
     float posY = PLAYER_START_Y;
     float velY = 0;
     float velX = 0;
-     float Rewind_time_left;
+    float Rewind_time_left;
 
     int jumpsAvailable = 0;
-   
+
     float playerHeight = 100;
     float playerWidth = 50;
     Color color = WHITE;
@@ -23,6 +23,17 @@ public:
     bool inAir = true;
     bool isGameOver = false;
 
+    Sound jumpSound;
+    static float jumpSoundVolumn;
+
+    Sound rewindSound;
+    static float rewindSoundVolumn;
+
+    Sound fallingDownSound;
+    static float fallingDownSoundVolumn;
+
+    void Init();    // call after InitAudioDevice()
+    void Cleanup(); // call before CloseAudioDevice()
 
     Rectangle GetCollisionRect() const;
     Rectangle GetNonCollisionRect() const;

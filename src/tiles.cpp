@@ -8,6 +8,12 @@ int Tile::currentTileIndex = 0;
 float Tile::baseSpeed = TILE_SPEED;
 BhopBuffer Tile::bhopBuffer;
 
+Sound Tile::redTileCollisonSound={};
+float Tile::redTileCollisonSoundVolumn=0.5f;
+
+Sound Tile::LogicalTileCollisonSound={};
+float Tile::LogicalTileCollisonSoundVolumn=1.0f;
+
 struct CodeToken
 {
     const char *text;
@@ -464,7 +470,7 @@ void Tile::Collision(Player &player, const std::vector<Tile *> &tiles)
                 }
             }
         }
-        else if (tiles[i]->tileType == TileType::SYNTAX&&!player.isRewinding)
+        else if (tiles[i]->tileType == TileType::SYNTAX && !player.isRewinding)
         {
             if (CheckCollisionRecs(playerBottom, tileTop))
             {
@@ -476,12 +482,13 @@ void Tile::Collision(Player &player, const std::vector<Tile *> &tiles)
                 }
                 else
                 {
+                    PlaySound(redTileCollisonSound);
                     player.isGameOver = true;
                 }
                 break;
             }
         }
-        else if (tiles[i]->tileType == TileType::LOGICAL&&!player.isRewinding)
+        else if (tiles[i]->tileType == TileType::LOGICAL && !player.isRewinding)
         {
             if (CheckCollisionRecs(playerBottom, tileTop))
             {
@@ -491,6 +498,11 @@ void Tile::Collision(Player &player, const std::vector<Tile *> &tiles)
                 player.posY = tiles[i]->tileY - player.playerHeight + 1;
                 player.velY = 0;
                 landedOnLogical = true;
+
+                // Only play on first frame of landing, not every frame
+                if (!IsSoundPlaying(LogicalTileCollisonSound))
+                    PlaySound(LogicalTileCollisonSound);
+
                 break;
             }
             else if (CheckCollisionRecs(playerTop, tileRect))
@@ -505,12 +517,18 @@ void Tile::Collision(Player &player, const std::vector<Tile *> &tiles)
             }
         }
     }
+
     if (!landedOnLogical && !landedOnNormal)
     {
         player.inAir = true;
         if (baseSpeed != TILE_SPEED)
             baseSpeed = TILE_SPEED;
+
+        // Stop logical tile sound the moment player leaves the tile
+        if (IsSoundPlaying(LogicalTileCollisonSound))
+            StopSound(LogicalTileCollisonSound);
     }
+
     if (landedOnLogical)
         SmoothCountdown(baseSpeed, TILE_SPEED);
     if (baseSpeed == 0)
@@ -519,8 +537,16 @@ void Tile::Collision(Player &player, const std::vector<Tile *> &tiles)
     DrawText(tileText.c_str(), 20, SCREEN_HEIGHT - 60, 45, WHITE);
 }
 
-void Tile::Cleanup(std::vector<Tile *> &tiles)
+void Tile::CleanupTiles(std::vector<Tile *> &tiles)
 {
+    // Unload sounds first before audio device closes
+    if (redTileCollisonSound.frameCount > 0)
+        UnloadSound(redTileCollisonSound);
+
+    if (LogicalTileCollisonSound.frameCount > 0)
+        UnloadSound(LogicalTileCollisonSound);
+
+    // Then delete tile pointers
     for (Tile *t : tiles)
         delete t;
     tiles.clear();
@@ -559,4 +585,14 @@ void Tile::SmoothCountdown(float &value, float startValue)
     value -= rate * GetFrameTime();
     if (value < 0)
         value = 0;
+}
+
+// Call this after InitAudioDevice()
+void Tile::Init()
+{
+    redTileCollisonSound = LoadSound("sounds\\red_tile_death_sound.wav");
+    SetSoundVolume(redTileCollisonSound, redTileCollisonSoundVolumn);
+
+    LogicalTileCollisonSound = LoadSound("sounds\\logical_tile_sound2.mp3");
+    SetSoundVolume(LogicalTileCollisonSound, LogicalTileCollisonSoundVolumn);
 }
