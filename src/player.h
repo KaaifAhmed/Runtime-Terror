@@ -15,13 +15,14 @@ public:
 
     float playerHeight = 100;
     float playerWidth = 50;
-    Color color = WHITE;
+    Color color = PLAYER_COLOR;
 
     bool isRewinding = false;
 
     int delay = 0;
     bool inAir = true;
     bool isGameOver = false;
+    int linesCompiled = 0;  // Track lines of code successfully compiled
 
     Sound jumpSound;
     static float jumpSoundVolumn;

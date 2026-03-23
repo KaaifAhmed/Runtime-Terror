@@ -68,9 +68,6 @@ Rectangle Player::GetNonCollisionRect() const
 // Update player physics: fall, jump, apply velocities
 void Player::Update()
 {
-    if (isGameOver)
-        DrawText("NOOB! XD", SCREEN_WIDTH/3, 50, 100, WHITE);
-
     Fall();
     Jump();
     posY += velY;

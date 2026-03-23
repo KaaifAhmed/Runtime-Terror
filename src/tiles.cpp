@@ -563,7 +563,7 @@ bool Tile::Chance(int percent)
     return GetRandomValue(1, 100) <= percent;
 }
 
-void Tile::WarningText(int tileIndex, Player player)
+void Tile::WarningText(int tileIndex, Player player, const std::vector<Tile *> &tiles)
 {
     if (tileIndex >= VARIANT_TILE_INDEX)
     {
@@ -572,10 +572,35 @@ void Tile::WarningText(int tileIndex, Player player)
             start_time = GetTime();
         double elapsed = GetTime() - start_time;
 
-        if (elapsed <= 2.0)
-            DrawText("Warning! Syntax errors detected", SCREEN_WIDTH / 4, 50, 100, RED);
+        // Check for upcoming dangerous tiles
+        bool syntaxWarning = false;
+        bool logicalWarning = false;
+
+        for (size_t i = 0; i < tiles.size(); i++)
+        {
+            if (tiles[i]->tileX > player.posX + 200 && tiles[i]->tileX < player.posX + 600) // Tiles approaching
+            {
+                if (tiles[i]->tileType == TileType::SYNTAX)
+                    syntaxWarning = true;
+                else if (tiles[i]->tileType == TileType::LOGICAL)
+                    logicalWarning = true;
+            }
+        }
+
+        if (syntaxWarning && elapsed <= 2.0)
+        {
+            DrawText("RED SYNTAX ERROR APPROACHING!", SCREEN_WIDTH / 4, 50, 60, UI_HIGHLIGHT);
+            DrawText("Press R to deflect or compilation crashes!", SCREEN_WIDTH / 6, 120, 30, UI_TEXT);
+        }
+        else if (logicalWarning && elapsed <= 2.0)
+        {
+            DrawText("BLUE LOGICAL ERROR APPROACHING!", SCREEN_WIDTH / 4, 50, 60, UI_ACCENT);
+            DrawText("Navigate carefully - slows compilation speed!", SCREEN_WIDTH / 6, 120, 30, UI_TEXT);
+        }
         else if (elapsed <= 4.0)
-            DrawText("Press \"R\" to deflect!", SCREEN_WIDTH / 6, 50, 100, RED);
+        {
+            DrawText("GREEN CODE BLOCKS = SUCCESSFUL COMPILATION", SCREEN_WIDTH / 6, 50, 40, {0, 180, 0, 255});
+        }
     }
 }
 
