@@ -1,4 +1,5 @@
 #pragma once
+#include <raylib.h>
 
 // GAME STATES
 enum GameState { MENU, PLAYING, GAME_OVER };
@@ -11,6 +12,9 @@ const Color UI_TEXT = {255, 255, 255, 255};           // White
 const Color UI_TEXT_SECONDARY = {180, 180, 180, 255}; // Light grey
 const Color PLAYER_COLOR = {100, 200, 255, 255};      // Light blue
 const Color TILE_BG = {40, 50, 60, 255};              // Dark blue
+
+// VS Code Dark+ Theme Colors
+const Color VS_BG = { 30, 30, 30, 255 };          // Editor Background
 
 // WORLD CONSTANTS
 const int SCREEN_WIDTH = 1680;
