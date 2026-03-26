@@ -5,8 +5,8 @@
 using namespace std;
 
 
-int Tile::tilesCreatedCount = 0;
-int Tile::currentTileIndex = 0;
+int Tile::TotaltilesCreatedCount = 0;
+int Tile::tilesLeft = 0;
 float Tile::baseSpeed = TILE_SPEED;
 BhopBuffer Tile::bhopBuffer;
 
@@ -333,7 +333,7 @@ static Color GetSnippetColor(const char *line)
 
 Tile::Tile(int startX)
 {
-    if (Tile::tilesCreatedCount >= VARIANT_TILE_INDEX)
+    if (Tile::TotaltilesCreatedCount >= VARIANT_TILE_INDEX)
     {
         if (Chance(30))
             tileType = TileType::SYNTAX;
@@ -351,9 +351,9 @@ Tile::Tile(int startX)
     tileX = startX;
     tileY = TILE_Y;
 
-this->tileIndex = Tile::tilesCreatedCount; 
-    Tile::tilesCreatedCount++; // This NEVER goes down
-    Tile::currentTileIndex++;  // This can go down when deleted
+this->tileIndex = Tile::TotaltilesCreatedCount; 
+    Tile::TotaltilesCreatedCount++; // This NEVER goes down
+    Tile::tilesLeft++;  // This can go down when deleted
 }
 
 Tile::Tile(int startX, float tilewidth, TileType type)
@@ -364,9 +364,9 @@ Tile::Tile(int startX, float tilewidth, TileType type)
     tileX = startX;
     tileY = TILE_Y;
 
-    this->tileIndex = Tile::tilesCreatedCount; 
-    Tile::tilesCreatedCount++; // This NEVER goes down
-    Tile::currentTileIndex++;  // This can go down when deleted
+    this->tileIndex = Tile::TotaltilesCreatedCount; 
+    Tile::TotaltilesCreatedCount++; // This NEVER goes down
+    Tile::tilesLeft++;  // This can go down when deleted
 }
 
 void Tile::Draw(TileType type)
@@ -411,17 +411,19 @@ bool Tile::Update(float gameSpeed)
 
 void Tile::Delete_And_Update(std::vector<Tile *> &tiles, float gameSpeed)
 {
-    // Update all tiles
-    for (Tile* t : tiles) {
-        t->Update(gameSpeed);
+    for (int i = tiles.size() - 1; i >= 0; i--)
+    {
+        tiles[i]->Update(gameSpeed);
     }
 
-    // Only delete the front tile if it's completely off-screen (left of 0)
-    if (!tiles.empty() && (tiles[0]->tileX + tiles[0]->tileWidth) < 0) 
+    if (tilesLeft >= LEFT_TILES)
     {
-        delete tiles[0];
-        tiles.erase(tiles.begin());
-
+        for (int i = 1; i >= 0; i--)
+        {
+            delete tiles[i];
+            tiles.erase(tiles.begin() + i);
+        }
+        tilesLeft -= 2;
     }
 }
 
@@ -477,7 +479,7 @@ void Tile::Collision(Player &player, const std::vector<Tile *> &tiles)
             {
                 player.inAir = false;
                 player.jumpsAvailable = 0;
-                currentTileIndex = i + 1;
+                tilesLeft = i + 1;
                 player.posY = tiles[i]->tileY - PLAYER_HEIGHT + 1;
                 player.velY = 0;
                 landedOnNormal = true;
@@ -528,7 +530,7 @@ void Tile::Collision(Player &player, const std::vector<Tile *> &tiles)
             {
                 player.inAir = false;
                 player.jumpsAvailable = 0;
-                currentTileIndex = i + 1;
+                tilesLeft = i + 1;
                 player.posY = tiles[i]->tileY - PLAYER_HEIGHT + 1;
                 player.velY = 0;
                 landedOnLogical = true;
@@ -575,7 +577,7 @@ void Tile::Collision(Player &player, const std::vector<Tile *> &tiles)
         SmoothCountdown(baseSpeed, TILE_SPEED);
     if (baseSpeed == 0)
         player.isGameOver = true;
-    std::string tileText = std::to_string(currentTileIndex);
+    std::string tileText = std::to_string(tilesLeft);
     DrawText(tileText.c_str(), 20, SCREEN_HEIGHT - 60, 45, WHITE);
 }
 

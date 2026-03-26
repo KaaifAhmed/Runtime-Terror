@@ -440,8 +440,8 @@ void resetGame()
 
   // --- 3. TILE & SCORING RESET ---
   // Important: tilesCreatedCount must reset so the first tile is ID 0 again
-  Tile::tilesCreatedCount = 0;
-  Tile::currentTileIndex = 0;
+  Tile::TotaltilesCreatedCount = 0;
+  Tile::tilesLeft = 0;
   Tile::baseSpeed = TILE_SPEED;
   lastTileIndex = -1; // -1 ensures the very first tile (Index 0) triggers a point
 

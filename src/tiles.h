@@ -15,8 +15,8 @@ class Tile
 public:
     static BhopBuffer bhopBuffer;
     
-    static int tilesCreatedCount; // Use this for the ID
-    static int currentTileIndex;  // Keep this for your "LEFT_TILES" logic
+    static int TotaltilesCreatedCount; 
+    static int tilesLeft;  
     int tileIndex;                // The individual tile's ID
     float tileWidth;
     float tileX;
