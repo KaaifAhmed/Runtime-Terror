@@ -4,6 +4,8 @@
 #include <iostream>
 using namespace std;
 
+
+int Tile::tilesCreatedCount = 0;
 int Tile::currentTileIndex = 0;
 float Tile::baseSpeed = TILE_SPEED;
 BhopBuffer Tile::bhopBuffer;
@@ -331,7 +333,7 @@ static Color GetSnippetColor(const char *line)
 
 Tile::Tile(int startX)
 {
-    if (currentTileIndex >= VARIANT_TILE_INDEX)
+    if (Tile::tilesCreatedCount >= VARIANT_TILE_INDEX)
     {
         if (Chance(30))
             tileType = TileType::SYNTAX;
@@ -348,6 +350,10 @@ Tile::Tile(int startX)
 
     tileX = startX;
     tileY = TILE_Y;
+
+this->tileIndex = Tile::tilesCreatedCount; 
+    Tile::tilesCreatedCount++; // This NEVER goes down
+    Tile::currentTileIndex++;  // This can go down when deleted
 }
 
 Tile::Tile(int startX, float tilewidth, TileType type)
@@ -357,6 +363,10 @@ Tile::Tile(int startX, float tilewidth, TileType type)
     snippetStartIndex = GetRandomValue(0, SNIPPET_COUNT - 1);
     tileX = startX;
     tileY = TILE_Y;
+
+    this->tileIndex = Tile::tilesCreatedCount; 
+    Tile::tilesCreatedCount++; // This NEVER goes down
+    Tile::currentTileIndex++;  // This can go down when deleted
 }
 
 void Tile::Draw(TileType type)
@@ -401,19 +411,17 @@ bool Tile::Update(float gameSpeed)
 
 void Tile::Delete_And_Update(std::vector<Tile *> &tiles, float gameSpeed)
 {
-    for (int i = tiles.size() - 1; i >= 0; i--)
-    {
-        tiles[i]->Update(gameSpeed);
+    // Update all tiles
+    for (Tile* t : tiles) {
+        t->Update(gameSpeed);
     }
 
-    if (currentTileIndex >= LEFT_TILES)
+    // Only delete the front tile if it's completely off-screen (left of 0)
+    if (!tiles.empty() && (tiles[0]->tileX + tiles[0]->tileWidth) < 0) 
     {
-        for (int i = 1; i >= 0; i--)
-        {
-            delete tiles[i];
-            tiles.erase(tiles.begin() + i);
-        }
-        currentTileIndex -= 2;
+        delete tiles[0];
+        tiles.erase(tiles.begin());
+
     }
 }
 

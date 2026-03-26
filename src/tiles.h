@@ -14,12 +14,15 @@ class Tile
 {
 public:
     static BhopBuffer bhopBuffer;
+    
+    static int tilesCreatedCount; // Use this for the ID
+    static int currentTileIndex;  // Keep this for your "LEFT_TILES" logic
+    int tileIndex;                // The individual tile's ID
     float tileWidth;
     float tileX;
     float tileY;
     int snippetStartIndex = 0;
     static constexpr float tileHeight = TILE_HEIGHT;
-    static int currentTileIndex;
     static float baseSpeed;
 
     static Sound redTileCollisonSound;

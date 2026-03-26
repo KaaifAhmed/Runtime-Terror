@@ -7,6 +7,7 @@
 #include <raylib.h>
 #include <string>
 #include <vector>
+#include "floatingtext.h"
 
 using namespace std;
 
@@ -18,7 +19,8 @@ GameState gameState = MENU;
 Music gameMusic;
 int lastTileIndex = 0;
 RewindBuffer rewindSys{REWIND_SECS * FPS};
- 
+std::vector<FloatingText> FloatingTextSystem::popups; // intilization is must
+
 // Function declarations
 void drawHitbox();
 void drawTiles();
@@ -31,7 +33,6 @@ void resetGame();
 
 int main()
 {
- 
 
   InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Code Compiler");
 
@@ -94,6 +95,7 @@ int main()
 
           player.isRewinding = true;
 
+          //--------------------Draw part-------------------------------
           // player.Hitbox(UI_ACCENT);
           // In main.cpp switch case PLAYING:
           player.Draw(); // This shows your blinking cursor
@@ -104,11 +106,14 @@ int main()
           {
             player.Hitbox(RED);
           }
+          // drawing all the game objects except the player
           drawTiles();
           Pickups::DrawAll(pickups);
+          FloatingTextSystem::DrawAll();
           DrawText("CTRL + Z!", SCREEN_WIDTH / 2 - 300, 100, 100, UI_HIGHLIGHT);
           drawRewindBar(player.Rewind_time_left);
           drawGameScore();
+          //------------------ Draw part ends here -------------------------
         }
       }
       else
@@ -134,19 +139,43 @@ int main()
 
           // Award lines for successfully passing tiles
 
-          if (Tile::currentTileIndex > lastTileIndex)
-          {
-            // Score the tile we just LEFT (lastTileIndex - 1), not the one we're on
-            int justLeft = lastTileIndex; // this is the tile index before we moved
-            if (justLeft > 0 && justLeft - 1 < (int)tiles.size())
-            {
-              if (tiles[justLeft - 1]->tileType == Tile::TileType::NORMAL)
-                player.linesCompiled += 5;
-              else if (tiles[justLeft - 1]->tileType == Tile::TileType::LOGICAL)
-                player.linesCompiled += 3;
-            }
-            lastTileIndex = Tile::currentTileIndex;
-          }
+          // --- ADD THE SCORING LOGIC HERE ---
+    Tile* standingOn = nullptr;
+    for (Tile *t : tiles) 
+    {
+        // Check if player is horizontally overlapping this tile
+        if (player.posX + player.playerWidth > t->tileX && player.posX < t->tileX + t->tileWidth) 
+        {
+            standingOn = t;
+            break;
+        }
+    }
+
+    // Only score if we found a tile AND it's a higher index than the last one we scored
+    if (standingOn != nullptr && standingOn->tileIndex > lastTileIndex) 
+    {
+        int points = 0;
+        Color pColor = GREEN;
+
+        if (standingOn->tileType == Tile::TileType::NORMAL) {
+            points = 5;
+            pColor = GREEN;
+        }
+        else if (standingOn->tileType == Tile::TileType::LOGICAL) {
+            points = 3;
+            pColor = BLUE;
+        }
+
+        if (points > 0) {
+            player.linesCompiled += points;
+            
+            // This triggers your new separate header system!
+            FloatingTextSystem::Push("+" + std::to_string(points), {player.posX, player.posY - 30}, pColor);
+        }
+        
+        // Mark this tile index as "completed" so we don't score it again
+        lastTileIndex = standingOn->tileIndex;
+    }
         }
         else
         {
@@ -168,6 +197,7 @@ int main()
         Pickups::DrawAll(pickups);
         drawRewindBar(player.Rewind_time_left);
         drawGameScore();
+         FloatingTextSystem::DrawAll();
       }
       break;
     }
@@ -393,29 +423,42 @@ void drawGameOverScreen()
 
 void resetGame()
 {
-  // Reset player — anchor to start of first tile
-  player.posX = TILES_START_X;          // left edge of tile + padding
-  player.posY = TILE_Y - PLAYER_HEIGHT; // sitting on top of tile
+  // --- 1. PLAYER RESET ---
+  player.posX = TILES_START_X;
+  player.posY = TILE_Y - PLAYER_HEIGHT;
   player.velY = 0;
   player.velX = 0;
-  player.inAir = false; // <-- also fix this, was true
+  player.inAir = false;
   player.jumpsAvailable = 1;
   player.isGameOver = false;
   player.linesCompiled = 0;
-  player.Rewind_time_left = REWIND_SECS;
   player.isRewinding = false;
-  lastTileIndex = 0;
+
+  // --- 2. REWIND SYSTEM RESET ---
+  player.Rewind_time_left = REWIND_SECS;
   rewindSys.Reset();
 
+  // --- 3. TILE & SCORING RESET ---
+  // Important: tilesCreatedCount must reset so the first tile is ID 0 again
+  Tile::tilesCreatedCount = 0;
+  Tile::currentTileIndex = 0;
+  Tile::baseSpeed = TILE_SPEED;
+  lastTileIndex = -1; // -1 ensures the very first tile (Index 0) triggers a point
+
+  // Clean up existing memory
   for (Tile *t : tiles)
     delete t;
   tiles.clear();
-  Tile::currentTileIndex = 0;
-  Tile::baseSpeed = TILE_SPEED;
+
+  // Spawn the starting platform
   tiles.push_back(new Tile(TILES_START_X, Tile::GetMaxTileWidth(), Tile::TileType::NORMAL));
+
+  // --- 4. WORLD & AUDIO RESET ---
   pickups.clear();
   scrollSpeed = 0;
-
   StopMusicStream(gameMusic);
   SeekMusicStream(gameMusic, 0.0f);
+
+  // Floating text reset 
+FloatingTextSystem::Clear();
 }
