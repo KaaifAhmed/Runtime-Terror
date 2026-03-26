@@ -50,7 +50,7 @@ bool Pickup::CheckCollect(Player &player)
     if (collected)
         return false;
 
-    Rectangle pRect = {player.posX, player.posY, player.playerWidth, player.playerHeight};
+    Rectangle pRect = {player.posX, player.posY, player.playerWidth, PLAYER_HEIGHT};
     Rectangle myRect = {x, y, size, size};
 
     if (CheckCollisionRecs(pRect, myRect))
@@ -58,7 +58,15 @@ bool Pickup::CheckCollect(Player &player)
         collected = true;
         PlaySound(collectingSound);
         if (player.Rewind_time_left < REWIND_SECS)
-            player.Rewind_time_left += 1.0f;
+        {
+                        if(player.Rewind_time_left+1.0f>5.0)
+            {
+                player.Rewind_time_left=5.0f;
+            }
+
+            else player.Rewind_time_left+=1.0f;
+        }
+
         return true;
     }
     return false;

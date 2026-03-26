@@ -38,6 +38,7 @@ public:
     TileType tileType = TileType::NORMAL;
 
     Tile(int startX);
+    Tile(int startX, float tilewidth, TileType type);
     void Draw(TileType type);
     bool Update(float gameSpeed);
     void Hitbox(Color c, TileType type);
@@ -47,6 +48,7 @@ public:
     static void New_tiles(std::vector<Tile *> &tiles);
     static void WarningText(int tileIndex, Player player, const std::vector<Tile *> &tiles);
     static void Init();
+    static float GetMaxTileWidth();
 
 
 private:

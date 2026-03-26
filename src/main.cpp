@@ -16,7 +16,9 @@ vector<Pickup> pickups;
 float scrollSpeed = 0;
 GameState gameState = MENU;
 Music gameMusic;
-
+int lastTileIndex = 0;
+RewindBuffer rewindSys{REWIND_SECS * FPS};
+ 
 // Function declarations
 void drawHitbox();
 void drawTiles();
@@ -27,9 +29,10 @@ void drawGameOverScreen();
 void drawGameScore();
 void resetGame();
 
-int main() {
-  RewindBuffer rewindSys(REWIND_SECS * FPS);
-  tiles.push_back(new Tile(TILES_START_X));
+int main()
+{
+ 
+
   InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Code Compiler");
 
   InitAudioDevice(); //  1. Init audio first
@@ -41,8 +44,10 @@ int main() {
 
   SetTargetFPS(FPS);
   player.Rewind_time_left = 5;
+  tiles.push_back(new Tile(TILES_START_X, Tile::GetMaxTileWidth(), Tile::TileType::NORMAL));
 
-  while (!WindowShouldClose()) {
+  while (!WindowShouldClose())
+  {
     BeginDrawing();
     // IMPORTANT: Call every frame to keep music streaming
     UpdateMusicStream(gameMusic);
@@ -50,26 +55,31 @@ int main() {
     // ClearBackground(UI_PRIMARY);
     ClearBackground(VS_BG);
 
-    switch (gameState) {
+    switch (gameState)
+    {
     case MENU:
       drawMenuScreen();
-      if (IsKeyPressed(KEY_SPACE)) {
+      if (IsKeyPressed(KEY_SPACE))
+      {
         gameState = PLAYING;
         PlayMusicStream(gameMusic);
       }
       break;
 
-    case PLAYING: {
+    case PLAYING:
+    {
       // Use 0.05f instead of 0 — float subtraction never lands exactly on 0,
       // so we treat anything below this epsilon as empty
       if ((IsKeyDown(KEY_Z) && IsKeyDown(KEY_LEFT_CONTROL)) &&
-          !player.isGameOver && player.Rewind_time_left > 0.05f) {
+          !player.isGameOver && player.Rewind_time_left > 0.05f)
+      {
         // Only play when rewind just starts, not every frame
         if (!player.isRewinding)
           PlaySound(player.rewindSound); //  fires once on first frame
 
         PlayerState restoredState;
-        if (rewindSys.Rewind(restoredState)) {
+        if (rewindSys.Rewind(restoredState))
+        {
           Player::ReduceRewind(player.Rewind_time_left, REWIND_DURATION);
 
           player.posX = restoredState.posX;
@@ -90,7 +100,8 @@ int main() {
 
           // Only show the red/white hitboxes if you press a specific key (like
           // H)
-          if (IsKeyDown(KEY_H)) {
+          if (IsKeyDown(KEY_H))
+          {
             player.Hitbox(RED);
           }
           drawTiles();
@@ -99,7 +110,9 @@ int main() {
           drawRewindBar(player.Rewind_time_left);
           drawGameScore();
         }
-      } else {
+      }
+      else
+      {
         if (player.isRewinding)
           StopSound(player.rewindSound);
 
@@ -111,7 +124,8 @@ int main() {
 
         // Tile::WarningText(Tile::currentTileIndex, player, tiles);
 
-        if (!player.isGameOver) {
+        if (!player.isGameOver)
+        {
           updateTiles(scrollSpeed);
 
           // spawn + update + draw pickups
@@ -119,24 +133,23 @@ int main() {
           Pickups::UpdateAll(pickups, player, scrollSpeed, Tile::baseSpeed);
 
           // Award lines for successfully passing tiles
-          static int lastTileIndex = 0;
-          if (Tile::currentTileIndex > lastTileIndex) {
-            int tilesPassed = Tile::currentTileIndex - lastTileIndex;
-            for (int i = 0; i < tilesPassed; i++) {
-              if (lastTileIndex + i < (int)tiles.size() &&
-                  tiles[lastTileIndex + i]->tileType ==
-                      Tile::TileType::NORMAL) {
-                player.linesCompiled += 5; // 5 lines per normal tile
-              } else if (lastTileIndex + i < (int)tiles.size() &&
-                         tiles[lastTileIndex + i]->tileType ==
-                             Tile::TileType::LOGICAL) {
-                player.linesCompiled +=
-                    3; // 3 lines per logical tile (harder to navigate)
-              }
+
+          if (Tile::currentTileIndex > lastTileIndex)
+          {
+            // Score the tile we just LEFT (lastTileIndex - 1), not the one we're on
+            int justLeft = lastTileIndex; // this is the tile index before we moved
+            if (justLeft > 0 && justLeft - 1 < (int)tiles.size())
+            {
+              if (tiles[justLeft - 1]->tileType == Tile::TileType::NORMAL)
+                player.linesCompiled += 5;
+              else if (tiles[justLeft - 1]->tileType == Tile::TileType::LOGICAL)
+                player.linesCompiled += 3;
             }
             lastTileIndex = Tile::currentTileIndex;
           }
-        } else {
+        }
+        else
+        {
           // Transition to game over screen
           gameState = GAME_OVER;
           PauseMusicStream(gameMusic);
@@ -147,7 +160,8 @@ int main() {
         player.Draw(); // This shows your blinking cursor
 
         // Only show the red/white hitboxes if you press a specific key (like H)
-        if (IsKeyDown(KEY_H)) {
+        if (IsKeyDown(KEY_H))
+        {
           player.Hitbox(RED);
         }
         drawTiles();
@@ -160,7 +174,8 @@ int main() {
 
     case GAME_OVER:
       drawGameOverScreen();
-      if (IsKeyPressed(KEY_SPACE)) {
+      if (IsKeyPressed(KEY_SPACE))
+      {
         resetGame();
         gameState = MENU;
       }
@@ -178,25 +193,29 @@ int main() {
   CloseWindow();
 }
 
-void drawHitbox() {
+void drawHitbox()
+{
   DrawText("The red is the hitbox!", SCREEN_WIDTH / 3, 30, 40, YELLOW);
   player.Hitbox(RED);
   for (Tile *t : tiles)
     t->Hitbox(ORANGE, t->tileType);
 }
 
-void drawTiles() {
+void drawTiles()
+{
   for (Tile *t : tiles)
     t->Draw(t->tileType);
   Tile::New_tiles(tiles);
 }
 
-void updateTiles(float scrollSpeed) {
+void updateTiles(float scrollSpeed)
+{
   Tile::Delete_And_Update(tiles, scrollSpeed);
   Tile::Collision(player, tiles);
 }
 
-void drawRewindBar(float rewindTimeLeft) {
+void drawRewindBar(float rewindTimeLeft)
+{
   const int BAR_X = 20;
   const int BAR_Y = SCREEN_HEIGHT - 50;
   const int BAR_WIDTH = 250;
@@ -229,7 +248,8 @@ void drawRewindBar(float rewindTimeLeft) {
   DrawText(timeStr, BAR_X + BAR_WIDTH + 8, BAR_Y + 4, 16, UI_TEXT_SECONDARY);
 }
 
-void drawMenuScreen() {
+void drawMenuScreen()
+{
   // Title
   const char *title = "RUNTIME TERROR";
   int titleFontSize = 80;
@@ -287,7 +307,8 @@ void drawMenuScreen() {
            {UI_ACCENT.r, UI_ACCENT.g, UI_ACCENT.b, (unsigned char)blinkAlpha});
 }
 
-void drawGameScore() {
+void drawGameScore()
+{
   // Score box in top-right
   int score = player.linesCompiled;
   char scoreStr[32];
@@ -310,7 +331,8 @@ void drawGameScore() {
   DrawText(scoreStr, boxX + 15, boxY + 18, 24, UI_ACCENT);
 }
 
-void drawGameOverScreen() {
+void drawGameOverScreen()
+{
   // Overlay
   DrawRectangle(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, {0, 0, 0, 150});
 
@@ -360,7 +382,8 @@ void drawGameOverScreen() {
            UI_TEXT);
 
   // Blinking effect
-  if (((int)(GetTime() * 1.5f) % 2) == 0) {
+  if (((int)(GetTime() * 1.5f) % 2) == 0)
+  {
     DrawRectangle((SCREEN_WIDTH - restartWidth) / 2 - 20, boxY + 345,
                   MeasureText(restartText, 28) + 40, 40, {0, 0, 0, 0});
     DrawRectangle((SCREEN_WIDTH - restartWidth) / 2 - 22, boxY + 343,
@@ -368,31 +391,31 @@ void drawGameOverScreen() {
   }
 }
 
-void resetGame() {
-  // Reset player
-  player.posX = PLAYER_START_X;
-  player.posY = PLAYER_START_Y;
+void resetGame()
+{
+  // Reset player — anchor to start of first tile
+  player.posX = TILES_START_X;          // left edge of tile + padding
+  player.posY = TILE_Y - PLAYER_HEIGHT; // sitting on top of tile
   player.velY = 0;
   player.velX = 0;
+  player.inAir = false; // <-- also fix this, was true
+  player.jumpsAvailable = 1;
   player.isGameOver = false;
-  player.inAir = true;
   player.linesCompiled = 0;
   player.Rewind_time_left = REWIND_SECS;
   player.isRewinding = false;
+  lastTileIndex = 0;
+  rewindSys.Reset();
 
-  // Reset tiles
-  for (Tile *t : tiles) {
+  for (Tile *t : tiles)
     delete t;
-  }
   tiles.clear();
-  tiles.push_back(new Tile(TILES_START_X));
-
-  // Reset pickups
+  Tile::currentTileIndex = 0;
+  Tile::baseSpeed = TILE_SPEED;
+  tiles.push_back(new Tile(TILES_START_X, Tile::GetMaxTileWidth(), Tile::TileType::NORMAL));
   pickups.clear();
-
-  // Reset scroll speed
   scrollSpeed = 0;
 
-  // Reset tile index tracking
-  Tile::currentTileIndex = 0;
+  StopMusicStream(gameMusic);
+  SeekMusicStream(gameMusic, 0.0f);
 }

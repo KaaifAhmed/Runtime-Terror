@@ -13,7 +13,7 @@ public:
 
     int jumpsAvailable = 0;
 
-    float playerHeight = 100;
+   
     float playerWidth = 50;
     Color color = PLAYER_COLOR;
 
