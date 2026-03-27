@@ -45,7 +45,9 @@ int main()
 
   SetTargetFPS(FPS);
   player.Rewind_time_left = 5;
-  tiles.push_back(new Tile(TILES_START_X, Tile::GetMaxTileWidth(), Tile::TileType::NORMAL));
+
+  // Ensure a clean full reset before the first game starts
+  resetGame();
 
   while (!WindowShouldClose())
   {
@@ -62,6 +64,7 @@ int main()
       drawMenuScreen();
       if (IsKeyPressed(KEY_SPACE))
       {
+        resetGame();
         gameState = PLAYING;
         PlayMusicStream(gameMusic);
       }
@@ -424,8 +427,9 @@ void drawGameOverScreen()
 void resetGame()
 {
   // --- 1. PLAYER RESET ---
+  // Position player so their collision rect properly overlaps tile top
   player.posX = TILES_START_X;
-  player.posY = TILE_Y - PLAYER_HEIGHT;
+  player.posY = TILE_Y - PLAYER_HEIGHT - 5;  // Move up slightly to ensure collision overlap
   player.velY = 0;
   player.velX = 0;
   player.inAir = false;
@@ -443,6 +447,7 @@ void resetGame()
   Tile::TotaltilesCreatedCount = 0;
   Tile::tilesLeft = 0;
   Tile::baseSpeed = TILE_SPEED;
+  Tile::bhopBuffer.framesLeft = 0;  // Reset deflection buffer
   lastTileIndex = -1; // -1 ensures the very first tile (Index 0) triggers a point
 
   // Clean up existing memory
