@@ -2,7 +2,7 @@
 #include <raylib.h>
 
 // GAME STATES
-enum GameState { MENU, PLAYING, GAME_OVER };
+enum GameState { MENU, PLAYING, PAUSED, GAME_OVER, LEADERBOARD, CREDITS };
 
 // UI COLORS
 const Color UI_PRIMARY = {30, 30, 40, 255};           // Dark blue-grey
