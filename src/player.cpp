@@ -1,7 +1,7 @@
 #include "player.h"
 #include "constants.h"
 #include "raylib.h"
-#include <cmath>
+#include <cmath> 
 #include <iostream>
 
 using namespace std;
@@ -56,10 +56,7 @@ void Player::Draw() {
 
   // Draw the "I-Beam" tips
   DrawRectangle(posX - 4, posY, 14, 2, cursorColor); // Top bar
-  DrawRectangle(posX - 4, posY + playerHeight - 2, 14, 2,
-                cursorColor); // Bottom bar
   DrawRectangle(posX - 4, posY +PLAYER_HEIGHT - 2, 14, 2, cursorColor); // Bottom bar
-
 }
 
 // Draw the hitbox with upper and lower parts
