@@ -24,6 +24,7 @@ Music gameMusic;
 int lastTileIndex = 0;
 RewindBuffer rewindSys{REWIND_SECS * FPS};
 std::vector<FloatingText> FloatingTextSystem::popups;
+bool shouldQuit = false;
 
 // Audio availability flag
 bool audioAvailable = false;
@@ -318,6 +319,7 @@ int main()
         }
         
         EndDrawing();
+        if (shouldQuit) break;
     }
     
     // Cleanup
@@ -358,7 +360,7 @@ void setupUICallbacks()
         },
         // On Exit
         []() {
-            CloseWindow();
+            shouldQuit = true;
         }
     );
     
@@ -384,7 +386,7 @@ void setupUICallbacks()
     };
     
     pauseScreen->onQuit = []() {
-        CloseWindow();
+       shouldQuit = true;
     };
     
     // Game Over callbacks
@@ -403,7 +405,7 @@ void setupUICallbacks()
     };
     
     gameOverScreen->onQuit = []() {
-        CloseWindow();
+       shouldQuit = true;
     };
     
     gameOverScreen->onSubmitScore = [](std::string name) {
