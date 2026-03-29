@@ -204,8 +204,6 @@ int main()
                     FloatingTextSystem::DrawAll();
                     player.Draw();
                     
-                    if (IsKeyDown(KEY_H))
-                        player.Hitbox(RED);
                     
                     DrawText("CTRL + Z!", SCREEN_WIDTH / 2 - 300, 100, 100, VSCodeTheme::ACCENT_ORANGE);
                     drawRewindBar(player.Rewind_time_left);
@@ -288,8 +286,6 @@ int main()
                 Pickups::DrawAll(pickups);
                 player.Draw();
                 
-                if (IsKeyDown(KEY_H))
-                    player.Hitbox(RED);
                 
                 FloatingTextSystem::DrawAll();
                 drawRewindBar(player.Rewind_time_left);
@@ -375,6 +371,99 @@ void setupUICallbacks()
         resetGame();
         gameState = PLAYING;
         PlayMusicStream(gameMusic);
+      }
+      break;
+
+    case PLAYING: {
+      // Use 0.05f instead of 0 — float subtraction never lands exactly on 0,
+      // so we treat anything below this epsilon as empty
+      if ((IsKeyDown(KEY_Z) && IsKeyDown(KEY_LEFT_CONTROL)) &&
+          !player.isGameOver && player.Rewind_time_left > 0.05f) {
+        // Only play when rewind just starts, not every frame
+        if (!player.isRewinding)
+          PlaySound(player.rewindSound); //  fires once on first frame
+
+        PlayerState restoredState;
+        if (rewindSys.Rewind(restoredState)) {
+          Player::ReduceRewind(player.Rewind_time_left, REWIND_DURATION);
+
+          player.posX = restoredState.posX;
+          player.posY = restoredState.posY;
+
+          float reverseSpeed = (scrollSpeed + TILE_SPEED * 2) * -1;
+          updateTiles(reverseSpeed);
+
+          // Move pickups at the same reverse speed so they stay on their tiles
+          for (Pickup &p : pickups)
+            p.Update(-TILE_SPEED, 0);
+
+          player.isRewinding = true;
+
+          player.Draw();
+
+
+          drawTiles();
+          Pickups::DrawAll(pickups);
+          DrawText("CTRL + Z!", SCREEN_WIDTH / 2 - 300, 100, 100, UI_HIGHLIGHT);
+          drawRewindBar(player.Rewind_time_left);
+          drawGameScore();
+        }
+      } else {
+        if (player.isRewinding)
+          StopSound(player.rewindSound);
+
+        PlayerState currentState = {player.posX, player.posY};
+        rewindSys.Record(currentState);
+
+        player.isRewinding = false;
+        player.Update();
+
+        // Tile::WarningText(Tile::currentTileIndex, player, tiles);
+
+        if (!player.isGameOver) {
+          updateTiles(scrollSpeed);
+
+          // spawn + update + draw pickups
+          Pickups::SpawnIfNeeded(pickups, tiles);
+          Pickups::UpdateAll(pickups, player, scrollSpeed, Tile::baseSpeed);
+
+          // Award lines for successfully passing tiles
+          static int lastTileIndex = 0;
+          if (Tile::currentTileIndex > lastTileIndex) {
+            int tilesPassed = Tile::currentTileIndex - lastTileIndex;
+            for (int i = 0; i < tilesPassed; i++) {
+              if (lastTileIndex + i < (int)tiles.size() &&
+                  tiles[lastTileIndex + i]->tileType ==
+                      Tile::TileType::NORMAL) {
+                player.linesCompiled += 5; // 5 lines per normal tile
+              } else if (lastTileIndex + i < (int)tiles.size() &&
+                         tiles[lastTileIndex + i]->tileType ==
+                             Tile::TileType::LOGICAL) {
+                player.linesCompiled +=
+                    3; // 3 lines per logical tile (harder to navigate)
+              }
+            }
+            lastTileIndex = Tile::currentTileIndex;
+          }
+        } else {
+          // Transition to game over screen
+          gameState = GAME_OVER;
+          PauseMusicStream(gameMusic);
+        }
+
+        player.Draw(); 
+
+        drawTiles();
+        Pickups::DrawAll(pickups);
+        drawRewindBar(player.Rewind_time_left);
+        drawGameScore();
+      }
+      break;
+    }
+
+    case GAME_OVER:
+      drawGameOverScreen();
+      if (IsKeyPressed(KEY_SPACE)) {
         uiManager->SwitchTo(ScreenType::PLAYING);
     };
     
