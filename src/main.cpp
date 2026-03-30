@@ -88,11 +88,7 @@ int main() {
           // In main.cpp switch case PLAYING:
           player.Draw(); // This shows your blinking cursor
 
-          // Only show the red/white hitboxes if you press a specific key (like
-          // H)
-          if (IsKeyDown(KEY_H)) {
-            player.Hitbox(RED);
-          }
+
           drawTiles();
           Pickups::DrawAll(pickups);
           DrawText("CTRL + Z!", SCREEN_WIDTH / 2 - 300, 100, 100, UI_HIGHLIGHT);
@@ -146,10 +142,6 @@ int main() {
         // In main.cpp switch case PLAYING:
         player.Draw(); // This shows your blinking cursor
 
-        // Only show the red/white hitboxes if you press a specific key (like H)
-        if (IsKeyDown(KEY_H)) {
-          player.Hitbox(RED);
-        }
         drawTiles();
         Pickups::DrawAll(pickups);
         drawRewindBar(player.Rewind_time_left);
