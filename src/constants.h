@@ -34,11 +34,12 @@ const int GROUND_POS = SCREEN_HEIGHT;
 const float HITBOX_SPLIT = 0.90f; // bottom 2px out of 100px height
 
 // TILE CONSTANTS
+const int OFFSET=50; // to precisely control how far up or down the game starts
 const int TILE_HEIGHT = 50;
 const float TILE_SPEED = 7;
 const float TILES_START_X = 50;
 const int LEFT_TILES = 10;
-const int TILE_Y = 4 * SCREEN_HEIGHT / 5;
+const int TILE_Y = 4 * SCREEN_HEIGHT / 5 - OFFSET;
 
 const int VARIANT_TILE_INDEX = 2;
 const int SCROLL_SPEED_DELAY = 50;
@@ -46,9 +47,10 @@ const float Speed_DELAY_DURATION = 1.0f;
 
 
 // PLAYER CONSTANTS
-const int JUMP_HEIGHT = 25;
+
 const float PLAYER_HEIGHT = 100.0f;
 const float PLAYER_START_X =TILES_START_X;
 const float PLAYER_START_Y = TILE_Y -PLAYER_HEIGHT;
-
 const float REWIND_DURATION=5;
+constexpr float FAST_FALL_MULTIPLIER=3.0f;
+const int JUMP_HEIGHT=25;

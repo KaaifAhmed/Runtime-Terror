@@ -11,9 +11,15 @@ public:
     float velX = 0;
     float Rewind_time_left;
 
+    // jump variables 
     int jumpsAvailable = 0;
+    // Variable jump
+    bool jumpHeld = false;
+    int jumpHoldFrames = 0;
 
-   
+    // Fast fall
+    bool isFastFalling = false;
+
     float playerWidth = 50;
     Color color = PLAYER_COLOR;
 
@@ -22,7 +28,7 @@ public:
     int delay = 0;
     bool inAir = true;
     bool isGameOver = false;
-    int linesCompiled = 0;  // Track lines of code successfully compiled
+    int linesCompiled = 0; // Track lines of code successfully compiled
 
     Sound jumpSound;
     static float jumpSoundVolumn;
@@ -43,5 +49,6 @@ public:
     void Update();
     void Fall();
     void Jump();
+    void Landed();
     static void ReduceRewind(float &rewind_time_left, float total_rewind_time);
 };

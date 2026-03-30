@@ -84,45 +84,57 @@ void Player::Update() {
   posX += velX;
 }
 
-void Player::Fall() {
-  if (posY >= GROUND_POS) {
-    velY = 0;
-    posY = GROUND_POS + 5;
-    if (!isGameOver) {
-      PlaySound(fallingDownSound);
-    }
-    isGameOver = true;
-  }
-
-  // Apply gravity if in air
-  if (inAir) {
-    delay++;
-    if (delay == GRAVITY_DELAY) {
-      delay = 0;
-      velY += GRAVITY;
-    }
-  }
-}
-
-// Handle jumping logic
 void Player::Jump() {
-  if (IsKeyPressed(KEY_SPACE)) {
-    if (!inAir) {
-      velY -= JUMP_HEIGHT;
-      inAir = true;
-      jumpsAvailable = 1;
-      PlaySound(jumpSound);
-    } else if (jumpsAvailable > 0) {
-      velY = -JUMP_HEIGHT;
-      jumpsAvailable--;
-      PlaySound(jumpSound);
+    if (IsKeyPressed(KEY_SPACE)) {
+        if (!inAir) {
+            velY -= JUMP_HEIGHT;
+            inAir = true;
+            jumpsAvailable = 1;
+            PlaySound(jumpSound);
+        } else if (jumpsAvailable > 0) {
+            velY = -JUMP_HEIGHT;
+            jumpsAvailable--;
+            PlaySound(jumpSound);
+        }
     }
-  }
 }
 
+void Player::Fall() {
+    if (posY >= GROUND_POS) {
+        velY = 0;
+        posY = GROUND_POS + 5;
+        if (!isGameOver) PlaySound(fallingDownSound);
+        isGameOver = true;
+    }
+
+    // Fast fall input handled here since it's downward physics
+    if (IsKeyPressed(KEY_DOWN) && inAir) {
+        isFastFalling = true;
+        jumpHeld = false;
+    }
+    if (IsKeyReleased(KEY_DOWN)) isFastFalling = false;
+
+    if (inAir) {
+        delay++;
+        if (delay == GRAVITY_DELAY) {
+            delay = 0;
+            velY += isFastFalling ? GRAVITY * FAST_FALL_MULTIPLIER : GRAVITY;
+        }
+    }
+}
 void Player::ReduceRewind(float &rewind_time_left, float total_rewind_time) {
   float rate = total_rewind_time / REWIND_DURATION;
   rewind_time_left -= rate * GetFrameTime();
   if (rewind_time_left < 0)
     rewind_time_left = 0;
+}
+
+void Player::Landed()
+{
+jumpHeld = false;
+jumpHoldFrames = 0;
+jumpsAvailable=0;
+delay = 0;
+inAir = false;
+isFastFalling = false;
 }

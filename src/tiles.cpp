@@ -4,7 +4,6 @@
 #include <iostream>
 using namespace std;
 
-
 int Tile::TotaltilesCreatedCount = 0;
 int Tile::tilesLeft = 0;
 float Tile::baseSpeed = TILE_SPEED;
@@ -351,9 +350,9 @@ Tile::Tile(int startX)
     tileX = startX;
     tileY = TILE_Y;
 
-this->tileIndex = Tile::TotaltilesCreatedCount; 
+    this->tileIndex = Tile::TotaltilesCreatedCount;
     Tile::TotaltilesCreatedCount++; // This NEVER goes down
-    Tile::tilesLeft++;  // This can go down when deleted
+    Tile::tilesLeft++;              // This can go down when deleted
 }
 
 Tile::Tile(int startX, float tilewidth, TileType type)
@@ -364,9 +363,9 @@ Tile::Tile(int startX, float tilewidth, TileType type)
     tileX = startX;
     tileY = TILE_Y;
 
-    this->tileIndex = Tile::TotaltilesCreatedCount; 
+    this->tileIndex = Tile::TotaltilesCreatedCount;
     Tile::TotaltilesCreatedCount++; // This NEVER goes down
-    Tile::tilesLeft++;  // This can go down when deleted
+    Tile::tilesLeft++;              // This can go down when deleted
 }
 
 void Tile::Draw(TileType type)
@@ -477,8 +476,7 @@ void Tile::Collision(Player &player, const std::vector<Tile *> &tiles)
         {
             if (CheckCollisionRecs(playerBottom, tileTop))
             {
-                player.inAir = false;
-                player.jumpsAvailable = 0;
+                player.Landed();
                 tilesLeft = i + 1;
                 player.posY = tiles[i]->tileY - PLAYER_HEIGHT + 1;
                 player.velY = 0;
@@ -528,8 +526,7 @@ void Tile::Collision(Player &player, const std::vector<Tile *> &tiles)
         {
             if (CheckCollisionRecs(playerBottom, tileTop))
             {
-                player.inAir = false;
-                player.jumpsAvailable = 0;
+                player.Landed();
                 tilesLeft = i + 1;
                 player.posY = tiles[i]->tileY - PLAYER_HEIGHT + 1;
                 player.velY = 0;
