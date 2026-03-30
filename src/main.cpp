@@ -84,9 +84,7 @@ int main() {
 
           player.isRewinding = true;
 
-          // player.Hitbox(UI_ACCENT);
-          // In main.cpp switch case PLAYING:
-          player.Draw(); // This shows your blinking cursor
+          player.Draw();
 
 
           drawTiles();
@@ -138,9 +136,7 @@ int main() {
           PauseMusicStream(gameMusic);
         }
 
-        // player.Hitbox(UI_ACCENT);
-        // In main.cpp switch case PLAYING:
-        player.Draw(); // This shows your blinking cursor
+        player.Draw(); 
 
         drawTiles();
         Pickups::DrawAll(pickups);
