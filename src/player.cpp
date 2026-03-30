@@ -56,12 +56,10 @@ void Player::Draw() {
 
   // Draw the "I-Beam" tips
   DrawRectangle(posX - 4, posY, 14, 2, cursorColor); // Top bar
-<<<<<<< HEAD
   DrawRectangle(posX - 4, posY + playerHeight - 2, 14, 2,
                 cursorColor); // Bottom bar
-=======
   DrawRectangle(posX - 4, posY +PLAYER_HEIGHT - 2, 14, 2, cursorColor); // Bottom bar
->>>>>>> 0433f93f98ad94049afdab3310909ff9383af4a3
+
 }
 
 // Draw the hitbox with upper and lower parts
