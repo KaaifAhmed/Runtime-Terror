@@ -4,15 +4,17 @@
 #include <iostream>
 using namespace std;
 
-int Tile::currentTileIndex = 0;
+
+int Tile::TotaltilesCreatedCount = 0;
+int Tile::tilesLeft = 0;
 float Tile::baseSpeed = TILE_SPEED;
 BhopBuffer Tile::bhopBuffer;
 
-Sound Tile::redTileCollisonSound={};
-float Tile::redTileCollisonSoundVolumn=0.5f;
+Sound Tile::redTileCollisonSound = {};
+float Tile::redTileCollisonSoundVolumn = 0.5f;
 
-Sound Tile::LogicalTileCollisonSound={};
-float Tile::LogicalTileCollisonSoundVolumn=1.0f;
+Sound Tile::LogicalTileCollisonSound = {};
+float Tile::LogicalTileCollisonSoundVolumn = 1.0f;
 
 struct CodeToken
 {
@@ -331,7 +333,7 @@ static Color GetSnippetColor(const char *line)
 
 Tile::Tile(int startX)
 {
-    if (currentTileIndex >= VARIANT_TILE_INDEX)
+    if (Tile::TotaltilesCreatedCount >= VARIANT_TILE_INDEX)
     {
         if (Chance(30))
             tileType = TileType::SYNTAX;
@@ -348,6 +350,23 @@ Tile::Tile(int startX)
 
     tileX = startX;
     tileY = TILE_Y;
+
+this->tileIndex = Tile::TotaltilesCreatedCount; 
+    Tile::TotaltilesCreatedCount++; // This NEVER goes down
+    Tile::tilesLeft++;  // This can go down when deleted
+}
+
+Tile::Tile(int startX, float tilewidth, TileType type)
+{
+    this->tileType = type;
+    this->tileWidth = tilewidth;
+    snippetStartIndex = GetRandomValue(0, SNIPPET_COUNT - 1);
+    tileX = startX;
+    tileY = TILE_Y;
+
+    this->tileIndex = Tile::TotaltilesCreatedCount; 
+    Tile::TotaltilesCreatedCount++; // This NEVER goes down
+    Tile::tilesLeft++;  // This can go down when deleted
 }
 
 void Tile::Draw(TileType type)
@@ -397,14 +416,14 @@ void Tile::Delete_And_Update(std::vector<Tile *> &tiles, float gameSpeed)
         tiles[i]->Update(gameSpeed);
     }
 
-    if (currentTileIndex >= LEFT_TILES)
+    if (tilesLeft >= LEFT_TILES)
     {
         for (int i = 1; i >= 0; i--)
         {
             delete tiles[i];
             tiles.erase(tiles.begin() + i);
         }
-        currentTileIndex -= 2;
+        tilesLeft -= 2;
     }
 }
 
@@ -437,15 +456,22 @@ void Tile::Collision(Player &player, const std::vector<Tile *> &tiles)
     {
         bhopBuffer.framesLeft--;
     }
+
     bool landedOnNormal = false;
     bool landedOnLogical = false;
     int playerRightEdge = player.posX + player.playerWidth;
+
+    // this is so that it dosent check collison multiple times from same collison
+    static float Syntax_collison_cooldown = 0.0f;
+    if (Syntax_collison_cooldown > 0.0f)
+        Syntax_collison_cooldown -= GetFrameTime();
+
     for (size_t i = 0; i < tiles.size(); i++)
     {
         Rectangle tileTop = {tiles[i]->tileX, tiles[i]->tileY, tiles[i]->tileWidth, tileHeight / 3};
         Rectangle tileRect = {tiles[i]->tileX, tiles[i]->tileY, tiles[i]->tileWidth, tileHeight};
-        Rectangle playerBottom = {player.posX, player.posY + (2 * player.playerHeight) / 3, player.playerWidth, player.playerHeight / 3};
-        Rectangle playerTop = {player.posX, player.posY, player.playerWidth, (2 * player.playerHeight) / 3};
+        Rectangle playerBottom = {player.posX, player.posY + (2 * PLAYER_HEIGHT) / 3, player.playerWidth, PLAYER_HEIGHT / 3};
+        Rectangle playerTop = {player.posX, player.posY, player.playerWidth, (2 * PLAYER_HEIGHT) / 3};
 
         if (tiles[i]->tileType == TileType::NORMAL)
         {
@@ -453,30 +479,40 @@ void Tile::Collision(Player &player, const std::vector<Tile *> &tiles)
             {
                 player.inAir = false;
                 player.jumpsAvailable = 0;
-                currentTileIndex = i + 1;
-                player.posY = tiles[i]->tileY - player.playerHeight + 1;
+                tilesLeft = i + 1;
+                player.posY = tiles[i]->tileY - PLAYER_HEIGHT + 1;
                 player.velY = 0;
                 landedOnNormal = true;
                 break;
             }
+            // NORMAL tile
             else if (CheckCollisionRecs(playerTop, tileRect))
             {
                 if (playerRightEdge >= tileRect.x)
                 {
-                    int overlapX = playerRightEdge - tileRect.x;
-                    player.posX = player.posX - overlapX + 1;
-                    landedOnNormal = true;
+                    // Only push back if player is above the tile top (coming from the side)
+                    // If player bottom is below tile top, they're falling onto/past it - let gravity handle it
+                    float playerBottom = player.posY + PLAYER_HEIGHT;
+                    float overlapY = playerBottom - tiles[i]->tileY;
+                    float overlapX = playerRightEdge - tileRect.x;
+
+                    if (overlapX < overlapY) // horizontal overlap is smaller = coming from the side
+                    {
+                        player.posX = player.posX - overlapX + 1;
+                        landedOnNormal = true;
+                    }
                     break;
                 }
             }
         }
-        else if (tiles[i]->tileType == TileType::SYNTAX && !player.isRewinding)
+        else if (tiles[i]->tileType == TileType::SYNTAX && !player.isRewinding && Syntax_collison_cooldown <= 0.0f)
         {
             if (CheckCollisionRecs(playerBottom, tileTop))
             {
                 if (bhopBuffer.framesLeft > 0)
                 {
-                    player.velY -= JUMP_HEIGHT * 2;
+
+                    player.velY = -JUMP_HEIGHT;
                     bhopBuffer.framesLeft = 0;
                     player.inAir = true;
                 }
@@ -494,8 +530,8 @@ void Tile::Collision(Player &player, const std::vector<Tile *> &tiles)
             {
                 player.inAir = false;
                 player.jumpsAvailable = 0;
-                currentTileIndex = i + 1;
-                player.posY = tiles[i]->tileY - player.playerHeight + 1;
+                tilesLeft = i + 1;
+                player.posY = tiles[i]->tileY - PLAYER_HEIGHT + 1;
                 player.velY = 0;
                 landedOnLogical = true;
 
@@ -505,13 +541,21 @@ void Tile::Collision(Player &player, const std::vector<Tile *> &tiles)
 
                 break;
             }
+
+            // LOGICAL tile - same change
             else if (CheckCollisionRecs(playerTop, tileRect))
             {
                 if (playerRightEdge >= tileRect.x)
                 {
-                    int overlapX = playerRightEdge - tileRect.x;
-                    player.posX = player.posX - overlapX + 1;
-                    landedOnLogical = true;
+                    float playerBottom = player.posY + PLAYER_HEIGHT;
+                    float overlapY = playerBottom - tiles[i]->tileY;
+                    float overlapX = playerRightEdge - tileRect.x;
+
+                    if (overlapX < overlapY)
+                    {
+                        player.posX = player.posX - overlapX + 1;
+                        landedOnLogical = true;
+                    }
                     break;
                 }
             }
@@ -533,7 +577,7 @@ void Tile::Collision(Player &player, const std::vector<Tile *> &tiles)
         SmoothCountdown(baseSpeed, TILE_SPEED);
     if (baseSpeed == 0)
         player.isGameOver = true;
-    std::string tileText = std::to_string(currentTileIndex);
+    std::string tileText = std::to_string(tilesLeft);
     DrawText(tileText.c_str(), 20, SCREEN_HEIGHT - 60, 45, WHITE);
 }
 
@@ -620,4 +664,19 @@ void Tile::Init()
 
     LogicalTileCollisonSound = LoadSound("sounds\\logical_tile_sound2.mp3");
     SetSoundVolume(LogicalTileCollisonSound, LogicalTileCollisonSoundVolumn);
+}
+
+float Tile::GetMaxTileWidth()
+{
+    const int fontSize = 24;
+    const int padding = 6;
+    float maxWidth = 0;
+    for (int i = 0; i < SNIPPET_COUNT; i++)
+    {
+        int textWidth = MeasureText(cppSnippets[i], fontSize);
+        float w = textWidth + padding * 2 + 20;
+        if (w > maxWidth)
+            maxWidth = w;
+    }
+    return maxWidth;
 }

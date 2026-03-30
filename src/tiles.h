@@ -14,12 +14,15 @@ class Tile
 {
 public:
     static BhopBuffer bhopBuffer;
+    
+    static int TotaltilesCreatedCount; 
+    static int tilesLeft;  
+    int tileIndex;                // The individual tile's ID
     float tileWidth;
     float tileX;
     float tileY;
     int snippetStartIndex = 0;
     static constexpr float tileHeight = TILE_HEIGHT;
-    static int currentTileIndex;
     static float baseSpeed;
 
     static Sound redTileCollisonSound;
@@ -38,6 +41,7 @@ public:
     TileType tileType = TileType::NORMAL;
 
     Tile(int startX);
+    Tile(int startX, float tilewidth, TileType type);
     void Draw(TileType type);
     bool Update(float gameSpeed);
     void Hitbox(Color c, TileType type);
@@ -47,6 +51,7 @@ public:
     static void New_tiles(std::vector<Tile *> &tiles);
     static void WarningText(int tileIndex, Player player, const std::vector<Tile *> &tiles);
     static void Init();
+    static float GetMaxTileWidth();
 
 
 private:

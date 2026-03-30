@@ -2,7 +2,7 @@
 #include <raylib.h>
 
 // GAME STATES
-enum GameState { MENU, PLAYING, GAME_OVER };
+enum GameState { MENU, PLAYING, PAUSED, GAME_OVER, LEADERBOARD, CREDITS };
 
 // UI COLORS
 const Color UI_PRIMARY = {30, 30, 40, 255};           // Dark blue-grey
@@ -27,13 +27,7 @@ const int GRAVITY_DELAY = 3;
 
 const int GROUND_POS = SCREEN_HEIGHT;
 
-// PLAYER CONSTANTS
-const int JUMP_HEIGHT = 25;
 
-const float PLAYER_START_X = 100;
-const float PLAYER_START_Y = 100;
-
-const float REWIND_DURATION=5;
 
 // HITBOX SPLIT — fraction of player height where the bottom (collidable) part starts
 // Change this one value and both Hitbox() and collision checks update automatically
@@ -50,3 +44,11 @@ const int VARIANT_TILE_INDEX = 2;
 const int SCROLL_SPEED_DELAY = 50;
 const float Speed_DELAY_DURATION = 1.0f;
 
+
+// PLAYER CONSTANTS
+const int JUMP_HEIGHT = 25;
+const float PLAYER_HEIGHT = 100.0f;
+const float PLAYER_START_X =TILES_START_X;
+const float PLAYER_START_Y = TILE_Y -PLAYER_HEIGHT;
+
+const float REWIND_DURATION=5;

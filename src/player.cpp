@@ -48,33 +48,37 @@ void Player::Draw() {
   Color cursorColor = {UI_ACCENT.r, UI_ACCENT.g, UI_ACCENT.b, alpha};
 
   // Draw the Glow (Using the explicit Rectangle to stay safe)
-  Rectangle glowRect = {posX - 2, posY, 10, playerHeight};
+  Rectangle glowRect = {posX - 2, posY, 10,PLAYER_HEIGHT};
   DrawRectangleLinesEx(glowRect, 1.0f, ColorAlpha(UI_ACCENT, 0.3f));
 
   // Draw the Main Cursor
-  DrawRectangle(posX, posY, 6, playerHeight, cursorColor);
+  DrawRectangle(posX, posY, 6,PLAYER_HEIGHT, cursorColor);
 
   // Draw the "I-Beam" tips
   DrawRectangle(posX - 4, posY, 14, 2, cursorColor); // Top bar
+<<<<<<< HEAD
   DrawRectangle(posX - 4, posY + playerHeight - 2, 14, 2,
                 cursorColor); // Bottom bar
+=======
+  DrawRectangle(posX - 4, posY +PLAYER_HEIGHT - 2, 14, 2, cursorColor); // Bottom bar
+>>>>>>> 0433f93f98ad94049afdab3310909ff9383af4a3
 }
 
 // Draw the hitbox with upper and lower parts
 void Player::Hitbox(Color c) {
-  float topRegion = playerHeight * HITBOX_SPLIT;
-  float bottomRegion = playerHeight - topRegion;
+  float topRegion =PLAYER_HEIGHT * HITBOX_SPLIT;
+  float bottomRegion =PLAYER_HEIGHT - topRegion;
   DrawRectangle(posX, posY, playerWidth, topRegion, WHITE);
   DrawRectangle(posX, posY + topRegion, playerWidth, bottomRegion, c);
 }
 
 Rectangle Player::GetCollisionRect() const {
-  return {posX, posY + playerHeight * HITBOX_SPLIT, playerWidth,
-          playerHeight * (1.0f - HITBOX_SPLIT)};
+  return {posX, posY +PLAYER_HEIGHT * HITBOX_SPLIT, playerWidth,
+         PLAYER_HEIGHT * (1.0f - HITBOX_SPLIT)};
 }
 
 Rectangle Player::GetNonCollisionRect() const {
-  return {posX, posY, playerWidth, playerHeight * HITBOX_SPLIT};
+  return {posX, posY, playerWidth,PLAYER_HEIGHT * HITBOX_SPLIT};
 }
 
 // Update player physics: fall, jump, apply velocities
