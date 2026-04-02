@@ -20,7 +20,7 @@ public:
     // Fast fall
     bool isFastFalling = false;
 
-    float playerWidth = 50;
+    float playerWidth = 10;
     Color color = PLAYER_COLOR;
 
     bool isRewinding = false;
@@ -45,7 +45,6 @@ public:
     Rectangle GetCollisionRect() const;
     Rectangle GetNonCollisionRect() const;
     void Draw();
-    void Hitbox(Color c);
     void Update();
     void Fall();
     void Jump();

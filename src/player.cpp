@@ -38,33 +38,18 @@ void Player::Cleanup() {
   }
 }
 void Player::Draw() {
-  // Calculate Pulse
+  // Calculate Pulse for blinking terminal block cursor
   float blink = (sinf(GetTime() * 10.0f) + 1.0f) / 2.0f;
-  unsigned char alpha = (unsigned char)((blink * 180) + 75);
+  unsigned char alpha = (unsigned char)((blink * 200) + 55);
 
   if (this->isRewinding || this->inAir)
     alpha = 255;
 
-  Color cursorColor = {UI_ACCENT.r, UI_ACCENT.g, UI_ACCENT.b, alpha};
+  Color cursorColor = {PLAYER_COLOR.r, PLAYER_COLOR.g, PLAYER_COLOR.b, alpha};
 
-  // Draw the Glow (Using the explicit Rectangle to stay safe)
-  Rectangle glowRect = {posX - 2, posY, 10,PLAYER_HEIGHT};
-  DrawRectangleLinesEx(glowRect, 1.0f, ColorAlpha(UI_ACCENT, 0.3f));
-
-  // Draw the Main Cursor
-  DrawRectangle(posX, posY, 6,PLAYER_HEIGHT, cursorColor);
-
-  // Draw the "I-Beam" tips
-  DrawRectangle(posX - 4, posY, 14, 2, cursorColor); // Top bar
-  DrawRectangle(posX - 4, posY +PLAYER_HEIGHT - 2, 14, 2, cursorColor); // Bottom bar
-}
-
-// Draw the hitbox with upper and lower parts
-void Player::Hitbox(Color c) {
-  float topRegion =PLAYER_HEIGHT * HITBOX_SPLIT;
-  float bottomRegion =PLAYER_HEIGHT - topRegion;
-  DrawRectangle(posX, posY, playerWidth, topRegion, WHITE);
-  DrawRectangle(posX, posY + topRegion, playerWidth, bottomRegion, c);
+  // Draw the Main Cursor as a thin typing line
+  int cursorWidth = playerWidth;
+  DrawRectangle(posX, posY, cursorWidth, PLAYER_HEIGHT, cursorColor);
 }
 
 Rectangle Player::GetCollisionRect() const {

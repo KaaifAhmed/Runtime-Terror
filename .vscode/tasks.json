@@ -6,36 +6,25 @@
         {
             "label": "build debug",
             "type": "process",
-            "command": "make",
+            "command": "C:/raylib/w64devkit/bin/g++.exe",
             "args": [
-                "PLATFORM=PLATFORM_DESKTOP",
-                "BUILD_MODE=DEBUG"
+                "-std=c++14",
+                "-g",
+                "-I",
+                "C:/raylib/raylib/src",
+                "src/*.cpp",
+                "-L",
+                "C:/raylib/raylib/src",
+                "-lraylib",
+                "-lopengl32",
+                "-lgdi32",
+                "-lwinmm",
+                "-luser32",
+                "-o",
+                "main.exe"
             ],
-            "windows": {
-                "command": "C:/raylib/w64devkit/bin/mingw32-make.exe",
-                "args": [
-                    "RAYLIB_PATH=C:/raylib/raylib",
-                    "PROJECT_NAME=${fileBasenameNoExtension}",
-                    "OBJS=src/*.cpp",
-                    "BUILD_MODE=DEBUG"
-                ]
-            },
-            "osx": {
-                "args": [
-                    "PROJECT_NAME=${fileBasenameNoExtension}",
-                    "OBJS=src/*.cpp",
-                    "BUILD_MODE=DEBUG"
-                ]
-            },
-            "linux": {
-                "args": [
-                    "PROJECT_NAME=${fileBasenameNoExtension}",
-                    "DESTDIR=/home/linuxbrew/.linuxbrew",
-                    "RAYLIB_LIBTYPE=SHARED",
-                    "EXAMPLE_RUNTIME_PATH=/home/linuxbrew/.linuxbrew/lib",
-                    "OBJS=src/*.cpp",
-                    "BUILD_MODE=DEBUG"
-                ]
+            "options": {
+                "cwd": "${workspaceFolder}"
             },
             "group": {
                 "kind": "build",
@@ -48,32 +37,25 @@
         {
             "label": "build release",
             "type": "process",
-            "command": "make",
+            "command": "C:/raylib/w64devkit/bin/g++.exe",
             "args": [
-                "PLATFORM=PLATFORM_DESKTOP"
+                "-std=c++14",
+                "-O2",
+                "-I",
+                "C:/raylib/raylib/src",
+                "src/*.cpp",
+                "-L",
+                "C:/raylib/raylib/src",
+                "-lraylib",
+                "-lopengl32",
+                "-lgdi32",
+                "-lwinmm",
+                "-luser32",
+                "-o",
+                "main.exe"
             ],
-            "windows": {
-                "command": "C:/raylib/w64devkit/bin/mingw32-make.exe",
-                "args": [
-                    "RAYLIB_PATH=C:/raylib/raylib",
-                    "PROJECT_NAME=${fileBasenameNoExtension}",
-                    "OBJS=src/*.cpp"
-                ]
-            },
-            "osx": {
-                "args": [
-                    "PROJECT_NAME=${fileBasenameNoExtension}",
-                    "OBJS=src/*.cpp"
-                ]
-            },
-            "linux": {
-                "args": [
-                    "PROJECT_NAME=${fileBasenameNoExtension}",
-                    "DESTDIR=/home/linuxbrew/.linuxbrew",
-                    "RAYLIB_LIBTYPE=SHARED",
-                    "EXAMPLE_RUNTIME_PATH=/home/linuxbrew/.linuxbrew/lib",
-                    "OBJS=src/*.cpp"
-                ]
+            "options": {
+                "cwd": "${workspaceFolder}"
             },
             "problemMatcher": [
                 "$gcc"

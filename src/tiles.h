@@ -44,12 +44,10 @@ public:
     Tile(int startX, float tilewidth, TileType type);
     void Draw(TileType type);
     bool Update(float gameSpeed);
-    void Hitbox(Color c, TileType type);
     static void Collision(Player &player, const std::vector<Tile *> &tiles);
     static void CleanupTiles(std::vector<Tile *> &tiles);
     static void Delete_And_Update(std::vector<Tile *> &tiles, float gameSpeed);
     static void New_tiles(std::vector<Tile *> &tiles);
-    static void WarningText(int tileIndex, Player player, const std::vector<Tile *> &tiles);
     static void Init();
     static float GetMaxTileWidth();
 

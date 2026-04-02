@@ -47,7 +47,7 @@ public:
             Color c = popups[i].color;
             c.a = (unsigned char)(popups[i].alpha * 255); 
             
-            DrawText(
+            DrawVSText(
                 popups[i].message.c_str(), 
                 (int)popups[i].position.x, 
                 (int)popups[i].position.y, 

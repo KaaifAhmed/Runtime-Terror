@@ -344,7 +344,7 @@ Tile::Tile(int startX)
     const int fontSize = 24;
     const int padding = 6;
     const char *snippet = cppSnippets[snippetStartIndex % SNIPPET_COUNT];
-    int textWidth = MeasureText(snippet, fontSize);
+    int textWidth = MeasureVSText(snippet, fontSize);
     tileWidth = textWidth + padding * 2 + 20;
 
     tileX = startX;
@@ -370,21 +370,25 @@ Tile::Tile(int startX, float tilewidth, TileType type)
 
 void Tile::Draw(TileType type)
 {
-    // Dark editor background
-    Color bgColor = {28, 28, 28, 255};
+    // Background colors based on tile type
+    Color bgColor = VS_BG;
     if (type == TileType::SYNTAX)
-        bgColor = {45, 12, 12, 255};
+        bgColor = { 79, 17, 21, 255 }; // #4F1115 Dark Red Highlight
     else if (type == TileType::LOGICAL)
-        bgColor = {12, 18, 45, 255};
+        bgColor = { 26, 64, 93, 255 }; // #1A405D Dark Blue Highlight
+
     DrawRectangle(tileX, tileY, tileWidth, tileHeight, bgColor);
 
-    // Colored top border
-    Color borderColor = {80, 80, 80, 255};
+    // Subtle top highlight line ("lit edge" feel)
+    Color topHighlight = {90, 90, 90, 180};
     if (type == TileType::SYNTAX)
-        borderColor = {220, 50, 50, 255};
+        topHighlight = {200, 60, 60, 160};  // Red edge for syntax errors
     else if (type == TileType::LOGICAL)
-        borderColor = {80, 120, 255, 255};
-    DrawRectangle(tileX, tileY, tileWidth, 3, borderColor);
+        topHighlight = {60, 130, 200, 160}; // Blue edge for logical errors
+    DrawRectangle(tileX, tileY, tileWidth, 2, topHighlight);
+
+    // Subtle bottom border (separates from void below)
+    DrawRectangle(tileX, tileY + tileHeight - 1, tileWidth, 1, {55, 55, 60, 200});
 
     const int fontSize = 24;
     const int padding = 6;
@@ -398,7 +402,7 @@ void Tile::Draw(TileType type)
 
     // Clip to tile width using scissor
     BeginScissorMode((int)tileX, (int)tileY, (int)tileWidth, (int)tileHeight);
-    DrawText(snippet, textX, textY, fontSize, textColor);
+    DrawCodeText(snippet, textX, textY, fontSize, textColor);
     EndScissorMode();
 }
 
@@ -572,10 +576,7 @@ void Tile::Collision(Player &player, const std::vector<Tile *> &tiles)
 
     if (landedOnLogical)
         SmoothCountdown(baseSpeed, TILE_SPEED);
-    if (baseSpeed == 0)
-        player.isGameOver = true;
-    std::string tileText = std::to_string(tilesLeft);
-    DrawText(tileText.c_str(), 20, SCREEN_HEIGHT - 60, 45, WHITE);
+    if (baseSpeed == 0) player.isGameOver = true;
 }
 
 void Tile::CleanupTiles(std::vector<Tile *> &tiles)
@@ -593,87 +594,27 @@ void Tile::CleanupTiles(std::vector<Tile *> &tiles)
     tiles.clear();
 }
 
-void Tile::Hitbox(Color c, TileType type)
-{
-    DrawRectangle(tileX, tileY, tileWidth, tileHeight / 3, c);
-    DrawRectangle(tileX, tileY + tileHeight / 3, tileWidth, (2 * tileHeight) / 3, WHITE);
+bool Tile::Chance(int percent) { return GetRandomValue(1, 100) <= percent; }
+
+void Tile::SmoothCountdown(float &value, float startValue) {
+    value -= (startValue / Speed_DELAY_DURATION) * GetFrameTime();
+    if (value < 0) value = 0;
 }
 
-bool Tile::Chance(int percent)
-{
-    return GetRandomValue(1, 100) <= percent;
-}
-
-void Tile::WarningText(int tileIndex, Player player, const std::vector<Tile *> &tiles)
-{
-    if (tileIndex >= VARIANT_TILE_INDEX)
-    {
-        static int start_time = -1;
-        if (start_time == -1)
-            start_time = GetTime();
-        double elapsed = GetTime() - start_time;
-
-        // Check for upcoming dangerous tiles
-        bool syntaxWarning = false;
-        bool logicalWarning = false;
-
-        for (size_t i = 0; i < tiles.size(); i++)
-        {
-            if (tiles[i]->tileX > player.posX + 200 && tiles[i]->tileX < player.posX + 600) // Tiles approaching
-            {
-                if (tiles[i]->tileType == TileType::SYNTAX)
-                    syntaxWarning = true;
-                else if (tiles[i]->tileType == TileType::LOGICAL)
-                    logicalWarning = true;
-            }
-        }
-
-        if (syntaxWarning && elapsed <= 2.0)
-        {
-            DrawText("RED SYNTAX ERROR APPROACHING!", SCREEN_WIDTH / 4, 50, 60, UI_HIGHLIGHT);
-            DrawText("Press R to deflect or compilation crashes!", SCREEN_WIDTH / 6, 120, 30, UI_TEXT);
-        }
-        else if (logicalWarning && elapsed <= 2.0)
-        {
-            DrawText("BLUE LOGICAL ERROR APPROACHING!", SCREEN_WIDTH / 4, 50, 60, UI_ACCENT);
-            DrawText("Navigate carefully - slows compilation speed!", SCREEN_WIDTH / 6, 120, 30, UI_TEXT);
-        }
-        else if (elapsed <= 4.0)
-        {
-            DrawText("GREEN CODE BLOCKS = SUCCESSFUL COMPILATION", SCREEN_WIDTH / 6, 50, 40, {0, 180, 0, 255});
-        }
-    }
-}
-
-void Tile::SmoothCountdown(float &value, float startValue)
-{
-    float rate = startValue / Speed_DELAY_DURATION;
-    value -= rate * GetFrameTime();
-    if (value < 0)
-        value = 0;
-}
-
-// Call this after InitAudioDevice()
-void Tile::Init()
-{
+void Tile::Init() {
     redTileCollisonSound = LoadSound("sounds\\red_tile_death_sound.wav");
     SetSoundVolume(redTileCollisonSound, redTileCollisonSoundVolumn);
-
     LogicalTileCollisonSound = LoadSound("sounds\\logical_tile_sound2.mp3");
     SetSoundVolume(LogicalTileCollisonSound, LogicalTileCollisonSoundVolumn);
 }
 
 float Tile::GetMaxTileWidth()
 {
-    const int fontSize = 24;
-    const int padding = 6;
+    const int fontSize = 24, padding = 6;
     float maxWidth = 0;
-    for (int i = 0; i < SNIPPET_COUNT; i++)
-    {
-        int textWidth = MeasureText(cppSnippets[i], fontSize);
-        float w = textWidth + padding * 2 + 20;
-        if (w > maxWidth)
-            maxWidth = w;
+    for (int i = 0; i < SNIPPET_COUNT; i++) {
+        float w = MeasureVSText(cppSnippets[i], fontSize) + padding * 2 + 20;
+        if (w > maxWidth) maxWidth = w;
     }
     return maxWidth;
 }

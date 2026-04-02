@@ -42,7 +42,7 @@ void Pickup::Draw() const
     // Bright inner highlight
     DrawRectangle((int)x + 3, (int)y + 3, (int)size - 6, (int)size - 6, {180, 255, 255, 255});
     // Small label
-    DrawText("+1s", (int)x - 2, (int)y - 16, 14, {0, 220, 220, 255});
+    DrawVSText("+1s", (int)x - 2, (int)y - 16, 14, {0, 220, 220, 255});
 }
 
 bool Pickup::CheckCollect(Player &player)
