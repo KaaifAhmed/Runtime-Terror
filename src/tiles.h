@@ -46,7 +46,8 @@ public:
     bool Update(float gameSpeed);
     static void Collision(Player &player, const std::vector<Tile *> &tiles);
     static void CleanupTiles(std::vector<Tile *> &tiles);
-    static void Delete_And_Update(std::vector<Tile *> &tiles, float gameSpeed);
+    static int CalculateRequiredLeftTiles(const std::vector<Tile *> &tiles, float scrollSpeed);
+    static void Delete_And_Update(std::vector<Tile *> &tiles, float gameSpeed, float scrollSpeed);
     static void New_tiles(std::vector<Tile *> &tiles);
     static void Init();
     static float GetMaxTileWidth();

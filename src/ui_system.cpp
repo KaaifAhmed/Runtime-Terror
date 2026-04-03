@@ -26,16 +26,16 @@ void Button::Draw() {
 // VS CODE BACKGROUND
 // ============================================
 void UI::DrawVSCideBackground(const char* activeTab) {
-    // Top menu bar
-    DrawRectangle(0, 0, GetScreenWidth(), 36, VSCodeTheme::BG_PANEL);
-    DrawVSText("File    Edit    Selection    View    Go    Run    Terminal    Help",
-               40, 10, 14, VSCodeTheme::TEXT_NORMAL);
-    DrawTextAligned("Runtime-Terror - Visual Studio Code", GetScreenWidth() / 2, 10, 14,
-                    VSCodeTheme::TEXT_NORMAL, 1);
+    // Activity bar (left) - draw this first so it goes all the way to the top
+    DrawRectangle(0, 0, 56, GetScreenHeight(), VSCodeTheme::BG_SIDEBAR);
+    DrawActivityBar(0, 0, GetScreenHeight(), 0);
 
-    // Activity bar (left)
-    DrawRectangle(0, 36, 56, GetScreenHeight() - 36, VSCodeTheme::BG_SIDEBAR);
-    DrawActivityBar(0, 36, GetScreenHeight() - 36, 0);
+    // Top menu bar (shifted right to account for Activity bar logo)
+    DrawRectangle(56, 0, GetScreenWidth() - 56, 36, VSCodeTheme::BG_PANEL);
+    DrawVSText("File    Edit    Selection    View    Go    Run    Terminal    Help",
+               70, 10, 14, VSCodeTheme::TEXT_NORMAL);
+    DrawTextAligned("Runtime-Terror - Visual Studio Code", GetScreenWidth() / 2 + 28, 10, 14,
+                    VSCodeTheme::TEXT_NORMAL, 1);
 
     // Tab bar
     DrawRectangle(56, 36, GetScreenWidth() - 56, 35, VSCodeTheme::BG_PANEL);

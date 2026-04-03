@@ -412,22 +412,62 @@ bool Tile::Update(float gameSpeed)
     return (tileX + tileWidth <= 0); // True if offscreen
 }
 
-void Tile::Delete_And_Update(std::vector<Tile *> &tiles, float gameSpeed)
+int Tile::CalculateRequiredLeftTiles(const std::vector<Tile *> &tiles, float scrollSpeed)
 {
-    for (int i = tiles.size() - 1; i >= 0; i--)
+    const float requiredDistance = (Tile::baseSpeed + scrollSpeed) * REWIND_SECS * FPS;
+    float accumulatedWidth = 0.0f;
+    int count = 0;
+
+    for (Tile *t : tiles)
+    {
+        float rightEdge = t->tileX + t->tileWidth;
+        if (rightEdge < 0.0f)
+        {
+            accumulatedWidth += t->tileWidth;
+            count++;
+            if (accumulatedWidth >= requiredDistance)
+                break;
+        }
+        else
+        {
+            // Once we hit screen or right side, we have enough of the left buffer
+            break;
+        }
+    }
+
+    return count;
+}
+
+void Tile::Delete_And_Update(std::vector<Tile *> &tiles, float gameSpeed, float scrollSpeed)
+{
+    // Update all tiles first.
+    for (int i = (int)tiles.size() - 1; i >= 0; i--)
     {
         tiles[i]->Update(gameSpeed);
     }
 
-    if (tilesLeft >= LEFT_TILES)
+    // Only prune during forward play; keep a minimum rewind buffer when scrolling normally.
+    if (gameSpeed >= 0.0f)
     {
-        for (int i = 1; i >= 0; i--)
+        const float requiredDistance = (Tile::baseSpeed + scrollSpeed) * REWIND_SECS * FPS;
+        while (!tiles.empty())
         {
-            delete tiles[i];
-            tiles.erase(tiles.begin() + i);
+            Tile *t = tiles.front();
+            float rightEdge = t->tileX + t->tileWidth;
+
+            if (rightEdge <= -requiredDistance)
+            {
+                delete t;
+                tiles.erase(tiles.begin());
+            }
+            else
+            {
+                break;
+            }
         }
-        tilesLeft -= 2;
     }
+
+    Tile::tilesLeft = (int)tiles.size();
 }
 
 void Tile::New_tiles(std::vector<Tile *> &tiles)
@@ -481,7 +521,7 @@ void Tile::Collision(Player &player, const std::vector<Tile *> &tiles)
             if (CheckCollisionRecs(playerBottom, tileTop))
             {
                 player.Landed();
-                tilesLeft = i + 1;
+                Tile::tilesLeft = (int)tiles.size();
                 player.posY = tiles[i]->tileY - PLAYER_HEIGHT + 1;
                 player.velY = 0;
                 landedOnNormal = true;
@@ -531,7 +571,7 @@ void Tile::Collision(Player &player, const std::vector<Tile *> &tiles)
             if (CheckCollisionRecs(playerBottom, tileTop))
             {
                 player.Landed();
-                tilesLeft = i + 1;
+                Tile::tilesLeft = (int)tiles.size();
                 player.posY = tiles[i]->tileY - PLAYER_HEIGHT + 1;
                 player.velY = 0;
                 landedOnLogical = true;

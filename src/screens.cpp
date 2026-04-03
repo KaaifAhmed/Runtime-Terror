@@ -41,7 +41,7 @@ void MainMenuScreen::Update() {
     }
 
     int startY = 300, btnWidth = 220, btnHeight = 35, spacing = 50;
-    int editorX = (GetScreenWidth() - btnWidth) / 2;
+    int editorX = 120; // Aligned with the left padding in Draw()
     for (size_t i = 0; i < menuOptions.size(); i++) {
         Rectangle btn = {(float)editorX, (float)(startY + i * spacing), (float)btnWidth, (float)btnHeight};
         if (UI::MouseInRect(btn)) {
@@ -55,18 +55,21 @@ void MainMenuScreen::Update() {
 void MainMenuScreen::Draw() {
     UI::DrawVSCideBackground("Welcome");
 
-    int editorX = GetScreenWidth() / 2 - 150;
+    int editorX = 120; // Left align with Activity Bar padding
     DrawVSText("Welcome to Runtime Terror", editorX, 150, 32, WHITE);
     DrawVSText("A Debugging Adventure", editorX, 190, 16, VSCodeTheme::TEXT_MUTED);
-    DrawVSText("Start", (GetScreenWidth() - 220) / 2, 260, 18, WHITE);
+    DrawVSText("Start", editorX, 260, 18, WHITE);
 
     int startY = 300, btnWidth = 220, btnHeight = 35, spacing = 50;
-    int cenX = (GetScreenWidth() - btnWidth) / 2;
     for (size_t i = 0; i < menuOptions.size(); i++) {
         bool isSelected = (i == (size_t)selectedOption);
         Color bg = isSelected ? VSCodeTheme::BUTTON_HOVER : VSCodeTheme::BUTTON_BG;
-        DrawRectangleRounded({(float)cenX, (float)(startY + i * spacing), (float)btnWidth, (float)btnHeight}, 0.1f, 4, bg);
-        DrawVSText(menuOptions[i].c_str(), cenX + 15, startY + i * spacing + (btnHeight - 16) / 2, 16, WHITE);
+        DrawRectangleRounded({(float)editorX, (float)(startY + i * spacing), (float)btnWidth, (float)btnHeight}, 0.1f, 4, bg);
+        // Draw an indicator arrow if selected to improve UX
+        if (isSelected) {
+            DrawVSText(">", editorX - 20, startY + i * spacing + (btnHeight - 16) / 2, 16, VSCodeTheme::ACCENT_BLUE);
+        }
+        DrawVSText(menuOptions[i].c_str(), editorX + 15, startY + i * spacing + (btnHeight - 16) / 2, 16, WHITE);
     }
 }
 
@@ -85,9 +88,9 @@ void PauseScreen::Update() {
     if (overlayAlpha < 0.7f) overlayAlpha += 0.05f;
 
     if (IsKeyPressed(KEY_ESCAPE)) { if (onResume) onResume(); return; }
-    if (IsKeyPressed(KEY_DOWN)) selectedOption = (selectedOption + 1) % pauseOptions.size();
-    if (IsKeyPressed(KEY_UP))   selectedOption = (selectedOption - 1 + pauseOptions.size()) % pauseOptions.size();
-    if (IsKeyPressed(KEY_ENTER)) {
+    if (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S)) selectedOption = (selectedOption + 1) % pauseOptions.size();
+    if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W))   selectedOption = (selectedOption - 1 + pauseOptions.size()) % pauseOptions.size();
+    if (IsKeyPressed(KEY_SPACE) || IsKeyPressed(KEY_ENTER)) {
         switch (selectedOption) {
             case 0: if (onResume)   onResume();   break;
             case 1: if (onRestart)  onRestart();  break;
@@ -191,8 +194,7 @@ void GameOverScreen::Update() {
 
     if (!showNameInput && typewriterDone && doneTimer > 0.2f) {
         if (IsKeyPressed(KEY_SPACE) || IsKeyPressed(KEY_ENTER)) { if (onRestart)  onRestart(); }
-        if (IsKeyPressed(KEY_M))                                 { if (onMainMenu) onMainMenu(); }
-        if (IsKeyPressed(KEY_Q))                                 { if (onQuit)     onQuit(); }
+        if (IsKeyPressed(KEY_ESCAPE))                           { if (onMainMenu) onMainMenu(); }
     }
 
     if (shakeTimer > 0) shakeTimer -= dt;
@@ -201,14 +203,15 @@ void GameOverScreen::Update() {
     if (showNameInput && nameLength < 20) {
         int key = GetCharPressed();
         while (key > 0) {
-            if (key >= 32 && key <= 125 && nameLength < 20) {
+            // Allow printable characters except SPACE
+            if (key >= 33 && key <= 125 && nameLength < 20) {
                 playerName[nameLength++] = (char)key;
                 playerName[nameLength] = '\0';
             }
             key = GetCharPressed();
         }
         if (IsKeyPressed(KEY_BACKSPACE) && nameLength > 0) playerName[--nameLength] = '\0';
-        if (IsKeyPressed(KEY_ENTER) && nameLength > 0) {
+        if ((IsKeyPressed(KEY_SPACE) || IsKeyPressed(KEY_ENTER)) && nameLength > 0) {
             savedPlayerName = std::string(playerName);
             if (onSubmitScore) onSubmitScore(savedPlayerName);
             showNameInput = false;
@@ -289,8 +292,7 @@ void GameOverScreen::DrawTerminalError() {
         DrawVSText("runtime@terror:~$ _", x, y + 14, 18, VSCodeTheme::TERMINAL_GREEN);
         y += 50;
         DrawVSText("[SPACE] Restart", x,        y, 18, VSCodeTheme::TEXT_NORMAL);
-        DrawVSText("[M] Main Menu",   x + 220,  y, 18, VSCodeTheme::TEXT_NORMAL);
-        DrawVSText("[Q] Quit",        x + 400,  y, 18, VSCodeTheme::TEXT_NORMAL);
+        DrawVSText("[ESC] Main Menu", x + 220,  y, 18, VSCodeTheme::TEXT_NORMAL);
     }
     if (!typewriterDone)
         DrawVSText("[SPACE] Skip animation", x, GetScreenHeight() - 40, 16, VSCodeTheme::TEXT_MUTED);
@@ -323,7 +325,7 @@ void GameOverScreen::DrawNameInput() {
     UI::DrawBlinkingCursor(panelX + 26 + MeasureVSText(playerName, 20) + 2, inputY + 8, 22, VSCodeTheme::ACCENT_BLUE);
 
     // Hint
-    const char* hint = "ENTER to save    ESC to skip";
+    const char* hint = "SPACE to save    ESC to skip";
     DrawVSText(hint, panelX + (panelW - MeasureVSText(hint, 14)) / 2, panelY + panelH - 30, 14, VSCodeTheme::TEXT_MUTED);
 }
 

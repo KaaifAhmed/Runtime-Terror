@@ -32,17 +32,24 @@ void Pickup::Cleanup()
         UnloadSound(collectingSound);
 }
 
+#include "ui_system.h"
+
 void Pickup::Draw() const
 {
     if (collected)
         return;
 
-    // Glowing cyan square
-    DrawRectangle((int)x, (int)y, (int)size, (int)size, {0, 220, 220, 255});
-    // Bright inner highlight
-    DrawRectangle((int)x + 3, (int)y + 3, (int)size - 6, (int)size - 6, {180, 255, 255, 255});
-    // Small label
-    DrawVSText("+1s", (int)x - 2, (int)y - 16, 14, {0, 220, 220, 255});
+    // VS Code styled widget (Accent Orange for Rewind time)
+    DrawRectangleRounded({x, y, size, size}, 0.2f, 4, VSCodeTheme::ACCENT_ORANGE);
+    DrawRectangleLinesEx({x, y, size, size}, 1, VSCodeTheme::BORDER);
+    
+    // Label above
+    int tw = MeasureVSText("+1s", 14);
+    DrawVSText("+1s", (int)(x + (size - tw) / 2), (int)(y - 18), 14, VSCodeTheme::ACCENT_ORANGE);
+    
+    // Inner icon (rewind symbol '<<')
+    int tw2 = MeasureVSText("<<", 16);
+    DrawVSText("<<", (int)(x + (size - tw2) / 2), (int)(y + (size - 16) / 2), 16, VSCodeTheme::BG_EDITOR);
 }
 
 bool Pickup::CheckCollect(Player &player)

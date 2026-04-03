@@ -1,4 +1,4 @@
-#include "constants.h"
+﻿#include "constants.h"
 #include "pickup.h"
 #include "player.h"
 #include "rewind.h"
@@ -58,17 +58,16 @@ struct Game
     void Init()
     {
         SetExitKey(KEY_NULL); // prevent ESC from closing window
+        // Do not force fullscreen (can cause mode-switch frame jitter/glitching):
         ToggleFullscreen();
 
         InitAudioDevice();
         audioAvailable = IsAudioDeviceReady();
 
-        vsFont = LoadFontEx("C:\\Windows\\Fonts\\segoeui.ttf", 96, 0, 256);
+        vsFont = LoadFontEx("C:\\Windows\\Fonts\\segoeui.ttf", 48, 0, 256);
         SetTextureFilter(vsFont.texture, TEXTURE_FILTER_BILINEAR);
-        GenTextureMipmaps(&vsFont.texture);
-        codeFont = LoadFontEx("C:\\Windows\\Fonts\\consola.ttf", 96, 0, 256);
+        codeFont = LoadFontEx("C:\\Windows\\Fonts\\consola.ttf", 48, 0, 256);
         SetTextureFilter(codeFont.texture, TEXTURE_FILTER_BILINEAR);
-        GenTextureMipmaps(&codeFont.texture);
         sideBarTex = LoadTexture("src\\side-bar.png");
         SetTextureFilter(sideBarTex, TEXTURE_FILTER_BILINEAR);
 
@@ -204,7 +203,7 @@ struct Game
                 // To move tiles right at baseSpeed
                 float reverseSpeed = -2.0f * Tile::baseSpeed;
                 // During rewind move tiles backward — do NOT spawn new tiles
-                Tile::Delete_And_Update(tiles, reverseSpeed);
+                Tile::Delete_And_Update(tiles, reverseSpeed, scrollSpeed);
                 Tile::Collision(player, tiles);
                 for (auto &p : pickups) p.Update(reverseSpeed, 0);
 
@@ -389,7 +388,7 @@ struct Game
     void updateTiles(float speed) {
         // Normal play: spawn new tiles, move existing, check collisions
         Tile::New_tiles(tiles);
-        Tile::Delete_And_Update(tiles, speed);
+        Tile::Delete_And_Update(tiles, speed, scrollSpeed);
         Tile::Collision(player, tiles);
     }
 
