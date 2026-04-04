@@ -205,7 +205,7 @@ struct Game
                 // During rewind move tiles backward — do NOT spawn new tiles
                 Tile::Delete_And_Update(tiles, reverseSpeed, scrollSpeed);
                 Tile::Collision(player, tiles);
-                for (auto &p : pickups) p.Update(reverseSpeed, 0);
+                for (auto &p : pickups) p.Update(-Tile::baseSpeed, 0);
 
                 player.isRewinding = true;
             } else {
