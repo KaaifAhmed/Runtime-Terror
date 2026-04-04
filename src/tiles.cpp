@@ -344,8 +344,8 @@ Tile::Tile(int startX)
     const int fontSize = 24;
     const int padding = 6;
     const char *snippet = cppSnippets[snippetStartIndex % SNIPPET_COUNT];
-    int textWidth = MeasureVSText(snippet, fontSize);
-    tileWidth = textWidth + padding * 2 + 20;
+   int textWidth = MeasureCodeText(snippet, fontSize);
+    tileWidth = (textWidth * 1.1f) + padding * 2 + 20;
 
     tileX = startX;
     tileY = TILE_Y;
@@ -653,7 +653,7 @@ float Tile::GetMaxTileWidth()
     const int fontSize = 24, padding = 6;
     float maxWidth = 0;
     for (int i = 0; i < SNIPPET_COUNT; i++) {
-        float w = MeasureVSText(cppSnippets[i], fontSize) + padding * 2 + 20;
+          float w = MeasureCodeText(cppSnippets[i], fontSize) + padding * 2 + 20; // was MeasureVSText
         if (w > maxWidth) maxWidth = w;
     }
     return maxWidth;
