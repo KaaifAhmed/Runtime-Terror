@@ -59,7 +59,7 @@ struct Game
     {
         SetExitKey(KEY_NULL); // prevent ESC from closing window
         // Do not force fullscreen (can cause mode-switch frame jitter/glitching):
-        ToggleFullscreen();
+        // ToggleFullscreen();
 
         InitAudioDevice();
         audioAvailable = IsAudioDeviceReady();
