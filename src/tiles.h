@@ -3,11 +3,27 @@
 #include "player.h"
 #include "raylib.h"
 #include <iostream>
+#include <deque>
 
 struct BhopBuffer
 {
     float framesLeft;
     const float maxFrames = 30;
+};
+
+enum class TilePatternPhase {
+    NORMAL,
+    LOGICAL,
+    MIXED,
+    SYNTAX_SPIKE
+};
+
+struct TilePatternSegment {
+    TilePatternPhase phase;
+    int length;              // number of tiles in this block
+    int syntaxChance;        // probability for SYNTAX in mixed/spike phases
+    int logicalChance;       // probability for LOGICAL in mixed phases
+    int normalChance;        // probability for NORMAL in mixed phases
 };
 
 class Tile
@@ -51,9 +67,14 @@ public:
     static void New_tiles(std::vector<Tile *> &tiles);
     static void Init();
     static float GetMaxTileWidth();
+    static TileType GetNextPatternTileType();
+    static void ResetPatternState();
+    static bool phaseChanged;
+    static TilePatternPhase currentPhase;
+    static bool firstCycleDone;
 
 
 private:
     static void SmoothCountdown(float &value, float startValue);
-    bool Chance(int percent);
+    static bool Chance(int percent);
 };

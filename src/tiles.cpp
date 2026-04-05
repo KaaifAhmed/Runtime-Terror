@@ -2,6 +2,7 @@
 #include "constants.h"
 #include <string>
 #include <iostream>
+#include <deque>
 using namespace std;
 
 int Tile::TotaltilesCreatedCount = 0;
@@ -14,6 +15,25 @@ float Tile::redTileCollisonSoundVolumn = 0.5f;
 
 Sound Tile::LogicalTileCollisonSound = {};
 float Tile::LogicalTileCollisonSoundVolumn = 1.0f;
+
+bool Tile::phaseChanged = false;
+TilePatternPhase Tile::currentPhase = TilePatternPhase::NORMAL;
+bool Tile::firstCycleDone = false;
+
+struct TilePatternState {
+    std::deque<TilePatternSegment> queue;
+    int segmentRemaining = 0;
+    TilePatternPhase currentPhase = TilePatternPhase::NORMAL;
+};
+
+static TilePatternState patternState;
+
+static const std::vector<TilePatternSegment> phaseTemplates = {
+    {TilePatternPhase::NORMAL, 20, 0, 10, 90},
+    {TilePatternPhase::LOGICAL, 25, 0, 70, 30},
+    {TilePatternPhase::MIXED, 40, 20, 50, 30},
+    {TilePatternPhase::SYNTAX_SPIKE, 3, 70, 30, 0}
+};
 
 struct CodeToken
 {
@@ -332,13 +352,7 @@ static Color GetSnippetColor(const char *line)
 
 Tile::Tile(int startX)
 {
-    if (Tile::TotaltilesCreatedCount >= VARIANT_TILE_INDEX)
-    {
-        if (Chance(30))
-            tileType = TileType::SYNTAX;
-        else if (Chance(20))
-            tileType = TileType::LOGICAL;
-    }
+    tileType = GetNextPatternTileType();
     snippetStartIndex = GetRandomValue(0, SNIPPET_COUNT - 1);
 
     const int fontSize = 24;
@@ -657,4 +671,84 @@ float Tile::GetMaxTileWidth()
         if (w > maxWidth) maxWidth = w;
     }
     return maxWidth;
+}
+
+void Tile::ResetPatternState() {
+    patternState.queue.clear();
+    patternState.segmentRemaining = 0;
+    patternState.currentPhase = TilePatternPhase::NORMAL;
+    phaseChanged = false;
+    currentPhase = TilePatternPhase::NORMAL;
+    firstCycleDone = false;
+    // Push the initial segments
+    for (const auto& seg : phaseTemplates) {
+        patternState.queue.push_back(seg);
+    }
+}
+
+Tile::TileType Tile::GetNextPatternTileType() {
+    if (patternState.queue.empty()) {
+        // Refill with templates or mixed
+        if (!firstCycleDone) {
+            for (const auto& seg : phaseTemplates) {
+                TilePatternSegment adjusted = seg;
+                if (Tile::TotaltilesCreatedCount > 60) {
+                    adjusted.syntaxChance = min(35, adjusted.syntaxChance + 5);
+                }
+                if (Tile::TotaltilesCreatedCount > 120) {
+                    adjusted.length = min(12, adjusted.length + 2);
+                }
+                patternState.queue.push_back(adjusted);
+            }
+            firstCycleDone = true;
+        } else {
+            // Infinite mixed phase with all three tile types and evolving challenge
+            int syntaxChance = 25;
+            int logicalChance = 40;
+            int normalChance = 35;
+
+            if (Tile::TotaltilesCreatedCount > 200) {
+                syntaxChance = 35;
+                logicalChance = 35;
+                normalChance = 30;
+            }
+            if (Tile::TotaltilesCreatedCount > 400) {
+                syntaxChance = 45;
+                logicalChance = 30;
+                normalChance = 25;
+            }
+            if (Tile::TotaltilesCreatedCount > 600) {
+                syntaxChance = 50;
+                logicalChance = 30;
+                normalChance = 20;
+            }
+
+            TilePatternSegment mixed = {TilePatternPhase::MIXED, GetRandomValue(10, 14), syntaxChance, logicalChance, normalChance};
+            patternState.queue.push_back(mixed);
+        }
+    }
+    TilePatternSegment &segment = patternState.queue.front();
+
+    if (currentPhase != segment.phase) {
+        phaseChanged = true;
+        currentPhase = segment.phase;
+    }
+
+    TileType type;
+    if (segment.phase == TilePatternPhase::NORMAL) {
+        type = TileType::NORMAL;
+    } else if (segment.phase == TilePatternPhase::LOGICAL) {
+        type = TileType::LOGICAL;
+    } else if (segment.phase == TilePatternPhase::SYNTAX_SPIKE) {
+        type = Tile::Chance(segment.syntaxChance) ? TileType::SYNTAX : TileType::LOGICAL;
+    } else { // MIXED
+        int roll = GetRandomValue(1, 100);
+        if (roll <= segment.syntaxChance) type = TileType::SYNTAX;
+        else if (roll <= segment.syntaxChance + segment.logicalChance) type = TileType::LOGICAL;
+        else type = TileType::NORMAL;
+    }
+
+    segment.length--;
+    if (segment.length <= 0) patternState.queue.pop_front();
+    return type;
 }

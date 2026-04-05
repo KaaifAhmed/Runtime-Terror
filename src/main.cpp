@@ -1,4 +1,4 @@
-﻿#include "constants.h"
+#include "constants.h"
 #include "pickup.h"
 #include "player.h"
 #include "rewind.h"
@@ -55,6 +55,16 @@ struct Game
     float colInterval = 0.18f;  // seconds per column step (mimics cursor movement speed)
     int lastLinesCompiled = 0;
 
+    // Instruction toasts
+    struct InstructionToast {
+        std::string title;
+        std::vector<std::string> lines;
+        float timeLeft;
+    };
+    std::vector<InstructionToast> activeToasts;
+    int toastIndex = 0;
+    float nextToastTime = 0.0f;
+
     void Init()
     {
         SetExitKey(KEY_NULL); // prevent ESC from closing window
@@ -74,6 +84,7 @@ struct Game
         player.Init();
         Pickup::Init();
         Tile::Init();
+        Tile::ResetPatternState();
 
         if (audioAvailable) {
             gameMusic = LoadMusicStream("src\\game_music.mp3");
@@ -142,6 +153,7 @@ struct Game
         Tile::tilesLeft = 0;
         Tile::baseSpeed = TILE_SPEED;
         Tile::bhopBuffer.framesLeft = 0;
+        Tile::ResetPatternState();
         lastTileIndex = -1;
 
         for (Tile* t : tiles) delete t;
@@ -159,6 +171,10 @@ struct Game
 
         currentLn = 1; currentCol = 1; colTimer = 0.0f; lastLinesCompiled = 0;
         FloatingTextSystem::Clear();
+
+        // Onboarding toasts - sequential
+        toastIndex = 0;
+        nextToastTime = 0.5f; // Show first tip after 0.5 seconds
     }
 
     void ChangeState(GameState newState)
@@ -180,9 +196,106 @@ struct Game
             finalScore, finalLines, finalTime);
     }
 
+    void PushInstructionToast(const std::string& title, const std::vector<std::string>& lines, float duration = 6.0f) {
+        activeToasts.push_back({title, lines, duration});
+    }
+
+    void UpdateInstructionToasts(float dt) {
+        for (auto it = activeToasts.begin(); it != activeToasts.end(); ) {
+            it->timeLeft -= dt;
+            if (it->timeLeft <= 0) {
+                it = activeToasts.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
+
+    void DrawInstructionToasts() {
+        if (activeToasts.empty()) return;
+
+        const InstructionToast& toast = activeToasts.back(); // Show the most recent
+
+        const int panelWidth = 450;
+        const int panelHeight = 90 + (toast.lines.size() - 1) * 26; // Adjust height for bigger text
+        const int panelX = SCREEN_WIDTH - panelWidth - 16;
+        const int panelY = SCREEN_HEIGHT - panelHeight - 44; // Above status bar
+
+        // Background with slight transparency
+        DrawRectangle(panelX, panelY, panelWidth, panelHeight, {37, 37, 38, 230});
+
+        // Border
+        DrawRectangleLinesEx({(float)panelX, (float)panelY, (float)panelWidth, (float)panelHeight}, 1, VSCodeTheme::ACCENT_CYAN);
+
+        // Accent bar
+        DrawRectangle(panelX, panelY, 4, panelHeight, VSCodeTheme::ACCENT_CYAN);
+
+        // Title
+        DrawVSText(toast.title.c_str(), panelX + 14, panelY + 14, 28, VSCodeTheme::ACCENT_CYAN);
+
+        // Lines
+        for (size_t i = 0; i < toast.lines.size(); ++i) {
+            DrawVSText(toast.lines[i].c_str(), panelX + 14, panelY + 50 + i * 26, 20, VSCodeTheme::TEXT_MUTED);
+        }
+    }
+
     void UpdatePlaying() {
         const float dt = GetFrameTime();
         UpdateMusicStream(gameMusic);
+        UpdateInstructionToasts(dt);
+
+        // Sequential onboarding toasts
+        if (toastIndex < 5 && nextToastTime > 0) {
+            nextToastTime -= dt;
+            if (nextToastTime <= 0) {
+                switch (toastIndex) {
+                    case 0:
+                        PushInstructionToast("Compilation Tip", {"Press SPACE to jump over null voids"}, 6.0f);
+                        nextToastTime = 6.5f;
+                        break;
+                    case 1:
+                        PushInstructionToast("Compilation Tip", {"Hold CTRL+Z to rewind"}, 6.0f);
+                        nextToastTime = 6.5f;
+                        break;
+                    case 2:
+                        PushInstructionToast("Compilation Tip", {"Compile normal code without errors"}, 6.0f);
+                        nextToastTime = 12.5f;
+                        break;
+                    case 3:
+                        PushInstructionToast("Compilation Tip", {"Blue codes are logical errors - jump quickly to avoid slowdown"}, 6.0f);
+                        nextToastTime = 12.5f;
+                        break;
+                    case 4:
+                        PushInstructionToast("Compilation Tip", {"Red codes are runtime errors - press R to rebound and survive"}, 6.0f);
+                        nextToastTime = 0.0f; // No more
+                        break;
+                }
+                toastIndex++;
+            }
+        }
+
+        if (Tile::phaseChanged) {
+            Tile::phaseChanged = false;
+            if (Tile::currentPhase == TilePatternPhase::LOGICAL) {
+                PushInstructionToast("Logical Error Phase", {
+                    "Entering logical error codes",
+                    "Blue codes lag your computer - jump quickly",
+                    "Avoid staying too long or crash"
+                }, 6.0f);
+            } else if (Tile::currentPhase == TilePatternPhase::MIXED) {
+                PushInstructionToast("Mixed Error Phase", {
+                    "Normal and erroneous codes mixed",
+                    "Watch for logical and runtime errors",
+                    "Use R to rebound from red codes"
+                }, 6.0f);
+            } else if (Tile::currentPhase == TilePatternPhase::SYNTAX_SPIKE) {
+                PushInstructionToast("Runtime Error Spike", {
+                    "Runtime error spike incoming",
+                    "Red tiles ahead - press R to rebound",
+                    "Stay ready for fast error handling"
+                }, 6.0f);
+            }
+        }
 
         // ── REWIND BRANCH ──────────────────────────────────────────────────
         bool rewindHeld = IsKeyDown(KEY_LEFT_CONTROL) && IsKeyDown(KEY_Z) && player.Rewind_time_left > 0.05f;
@@ -372,13 +485,15 @@ struct Game
             DrawRectangleLinesEx({(float)toastX, (float)toastY, (float)toastW, (float)toastH}, 1,
                                   {VSCodeTheme::ACCENT_ORANGE.r, VSCodeTheme::ACCENT_ORANGE.g, VSCodeTheme::ACCENT_ORANGE.b, ba});
             DrawRectangle(toastX, toastY, 4, toastH, VSCodeTheme::ACCENT_ORANGE);
-            DrawVSText("Rewinding Timeline", toastX + 14, toastY + 14, 18, VSCodeTheme::ACCENT_ORANGE);
+            DrawVSText("Rewinding Execution", toastX + 14, toastY + 14, 18, VSCodeTheme::ACCENT_ORANGE);
             char sub[64]; sprintf(sub, "Hold Ctrl+Z  |  %.1fs remaining", player.Rewind_time_left);
             DrawVSText(sub, toastX + 14, toastY + 42, 14, VSCodeTheme::TEXT_MUTED);
             int pbX2 = toastX + 14, pbY2 = toastY + toastH - 8, pbW2 = toastW - 28;
             DrawRectangle(pbX2, pbY2, pbW2, 4, {60, 60, 60, 255});
             DrawRectangle(pbX2, pbY2, (int)(pbW2 * fraction), 4, VSCodeTheme::ACCENT_ORANGE);
         }
+
+        DrawInstructionToasts();
     }
 
     void DrawTiles() {
