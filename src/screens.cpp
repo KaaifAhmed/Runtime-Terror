@@ -156,6 +156,10 @@ void GameOverScreen::SetResults(int score, int lines, int time, bool highScore) 
 
 void GameOverScreen::SetStyle(Style s) { style = Style::TERMINAL_ERROR; (void)s; }
 
+void GameOverScreen::SetErrorOverride(const std::string& msg, const std::string& detail, const std::string& code) {
+    errorMessage = msg; errorDetail = detail; errorCode = code;
+}
+
 void GameOverScreen::OnEnter() {
     doneTimer = displayTimer = 0;
     nameLength = 0;

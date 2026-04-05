@@ -77,6 +77,7 @@ public:
     void OnExit() override;
     void SetResults(int score, int lines, int time, bool highScore);
     void SetStyle(Style s);
+    void SetErrorOverride(const std::string& msg, const std::string& detail, const std::string& code);
 
     std::function<void()> onRestart, onMainMenu, onQuit;
     std::function<void(std::string)> onSubmitScore;

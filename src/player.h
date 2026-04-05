@@ -1,6 +1,21 @@
 #pragma once
 #include "raylib.h"
 #include "constants.h"
+#include <queue>
+
+// Define possible buffered actions
+enum class Action {
+    NONE,
+    DASH,
+    JUMP
+};
+
+enum class DeathCause {
+    NONE,
+    VOID_FALL,
+    SYNTAX_ERROR,
+    PORTAL_GAMBLE
+};
 
 class Player
 {
@@ -28,7 +43,15 @@ public:
     int delay = 0;
     bool inAir = true;
     bool isGameOver = false;
+    DeathCause causeOfDeath = DeathCause::NONE;
     int linesCompiled = 0; // Track lines of code successfully compiled
+
+    std::queue<Action> inputQueue;
+    // Dash variables
+    int dashFramesLeft = 0;
+    float dashSpeed = 15.0f;
+    int dashCharges = 0;
+    float timeSinceLastDashRecharge = 0.0f;
 
     Sound jumpSound;
     static float jumpSoundVolumn;

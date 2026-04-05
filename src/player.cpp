@@ -49,24 +49,74 @@ void Player::Draw() {
 
   // Draw the Main Cursor as a thin typing line
   int cursorWidth = playerWidth;
-  DrawRectangle(posX, posY, cursorWidth, PLAYER_HEIGHT, cursorColor);
+  float currentHeight = (dashFramesLeft > 0) ? PLAYER_HEIGHT / 2 : PLAYER_HEIGHT;
+  DrawRectangle(posX, posY + (PLAYER_HEIGHT - currentHeight), cursorWidth, currentHeight, cursorColor);
 }
 
 Rectangle Player::GetCollisionRect() const {
-  return {posX, posY +PLAYER_HEIGHT * HITBOX_SPLIT, playerWidth,
-         PLAYER_HEIGHT * (1.0f - HITBOX_SPLIT)};
+  float currentHeight = (dashFramesLeft > 0) ? PLAYER_HEIGHT / 2 : PLAYER_HEIGHT;
+  return {posX, posY + currentHeight * HITBOX_SPLIT, playerWidth,
+         currentHeight * (1.0f - HITBOX_SPLIT)};
 }
 
 Rectangle Player::GetNonCollisionRect() const {
-  return {posX, posY, playerWidth,PLAYER_HEIGHT * HITBOX_SPLIT};
+  float currentHeight = (dashFramesLeft > 0) ? PLAYER_HEIGHT / 2 : PLAYER_HEIGHT;
+  return {posX, posY, playerWidth, currentHeight * HITBOX_SPLIT};
 }
 
 // Update player physics: fall, jump, apply velocities
 void Player::Update() {
-  Fall();
-  Jump();
-  posY += velY;
-  posX += velX;
+  // Update Recharge Timer (1 charge every 5 seconds, infinite capacity)
+  if (!isGameOver) {
+      timeSinceLastDashRecharge += GetFrameTime();
+      if (timeSinceLastDashRecharge >= 5.0f) {
+          dashCharges++;
+          timeSinceLastDashRecharge = 0.0f;
+      }
+  }
+
+  // 1. Record Inputs into the Queue
+  if (IsKeyPressed(KEY_LEFT_SHIFT)) {
+      if (dashCharges > 0) {
+          inputQueue.push(Action::DASH);
+      }
+  }
+  
+  if (inputQueue.size() > 2) inputQueue.pop(); 
+
+  // 2. Process Dash Physics if currently dashing
+  if (dashFramesLeft > 0) {
+      velY = 0; // Ignore gravity while dashing
+      posX += dashSpeed;
+      dashFramesLeft--;
+  } 
+  else {
+      Fall();
+      Jump();
+      posY += velY;
+      posX += velX;
+      
+      // Return to center if pushed forward by dashing or collisions
+      if (posX > PLAYER_START_X) {
+          posX -= 4.0f; 
+          if (posX < PLAYER_START_X) posX = PLAYER_START_X;
+      } else if (posX < PLAYER_START_X) {
+          posX += 4.0f;
+          if (posX > PLAYER_START_X) posX = PLAYER_START_X;
+      }
+      
+      // 3. Check Queue when we are grounded and ready to act
+      if (!inAir) {
+          if (!inputQueue.empty()) {
+              Action nextAction = inputQueue.front();
+              while (!inputQueue.empty()) inputQueue.pop();
+              if (nextAction == Action::DASH && dashCharges > 0 && posX < SCREEN_WIDTH - playerWidth - 100) {
+                  dashFramesLeft = 20; 
+                  dashCharges--; 
+              }
+          }
+      }
+  }
 }
 
 void Player::Jump() {
@@ -90,6 +140,7 @@ void Player::Fall() {
         posY = GROUND_POS + 5;
         if (!isGameOver) PlaySound(fallingDownSound);
         isGameOver = true;
+        causeOfDeath = DeathCause::VOID_FALL;
     }
 
     // Fast fall input handled here since it's downward physics

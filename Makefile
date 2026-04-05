@@ -355,7 +355,7 @@ OBJ_DIR = obj
 # Define all object files from source files
 SRC = $(call rwildcard, *.c, *.h)
 #OBJS = $(SRC:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
-OBJS ?= $(SRC_DIR)/main.cpp $(SRC_DIR)/ui_system.cpp $(SRC_DIR)/leaderboard.cpp $(SRC_DIR)/screens.cpp $(SRC_DIR)/player.cpp $(SRC_DIR)/tiles.cpp $(SRC_DIR)/pickup.cpp
+OBJS ?= $(SRC_DIR)/main.cpp $(SRC_DIR)/ui_system.cpp $(SRC_DIR)/leaderboard.cpp $(SRC_DIR)/screens.cpp $(SRC_DIR)/player.cpp $(SRC_DIR)/tiles.cpp $(SRC_DIR)/pickup.cpp $(SRC_DIR)/graph.cpp
 
 # For Android platform we call a custom Makefile.Android
 ifeq ($(PLATFORM),PLATFORM_ANDROID)

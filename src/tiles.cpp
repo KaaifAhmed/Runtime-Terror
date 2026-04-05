@@ -3,7 +3,11 @@
 #include <string>
 #include <iostream>
 #include <deque>
+#include "graph.h"
 using namespace std;
+
+extern TeleportGraph teleportNetwork;
+bool inDarkWorld = false;
 
 int Tile::TotaltilesCreatedCount = 0;
 int Tile::tilesLeft = 0;
@@ -353,12 +357,23 @@ static Color GetSnippetColor(const char *line)
 Tile::Tile(int startX)
 {
     tileType = GetNextPatternTileType();
+    
+    if (inDarkWorld && Tile::TotaltilesCreatedCount >= 10) {
+        if (Tile::Chance(50)) tileType = TileType::SYNTAX;
+        else if (Tile::Chance(20)) tileType = TileType::LOGICAL;
+    }
+    
+    // User Override: Force a red tile every 5 tiles globally!
+    if ((Tile::TotaltilesCreatedCount + 1) % 5 == 0) {
+        tileType = TileType::SYNTAX;
+    }
+    
     snippetStartIndex = GetRandomValue(0, SNIPPET_COUNT - 1);
 
     const int fontSize = 24;
     const int padding = 6;
     const char *snippet = cppSnippets[snippetStartIndex % SNIPPET_COUNT];
-   int textWidth = MeasureCodeText(snippet, fontSize);
+    int textWidth = MeasureCodeText(snippet, fontSize);
     tileWidth = (textWidth * 1.1f) + padding * 2 + 20;
 
     tileX = startX;
@@ -384,12 +399,18 @@ Tile::Tile(int startX, float tilewidth, TileType type)
 
 void Tile::Draw(TileType type)
 {
-    // Background colors based on tile type
     Color bgColor = VS_BG;
-    if (type == TileType::SYNTAX)
-        bgColor = { 79, 17, 21, 255 }; // #4F1115 Dark Red Highlight
-    else if (type == TileType::LOGICAL)
-        bgColor = { 26, 64, 93, 255 }; // #1A405D Dark Blue Highlight
+    
+    if (inDarkWorld) {
+        bgColor = Color{ 15, 0, 15, 255 }; // Deep dark purple base
+        if (type == TileType::SYNTAX) bgColor = Color{ 110, 0, 0, 255 }; // Menacing red
+        else if (type == TileType::LOGICAL) bgColor = Color{ 0, 0, 110, 255 }; // Menacing blue
+    } else {
+        if (type == TileType::SYNTAX)
+            bgColor = { 79, 17, 21, 255 }; // #4F1115 Dark Red Highlight
+        else if (type == TileType::LOGICAL)
+            bgColor = { 26, 64, 93, 255 }; // #1A405D Dark Blue Highlight
+    }
 
     DrawRectangle(tileX, tileY, tileWidth, tileHeight, bgColor);
 
@@ -517,6 +538,22 @@ void Tile::Collision(Player &player, const std::vector<Tile *> &tiles)
     bool landedOnNormal = false;
     bool landedOnLogical = false;
     int playerRightEdge = player.posX + player.playerWidth;
+
+    // Check Graph Teleportation first
+    for (auto it = teleportNetwork.GetNodes().begin(); it != teleportNetwork.GetNodes().end(); ++it) {
+        Rectangle nodeRect = {it->posX, it->posY, it->width, it->height};
+        if (CheckCollisionRecs(player.GetCollisionRect(), nodeRect) || 
+            CheckCollisionRecs(player.GetNonCollisionRect(), nodeRect)) {
+            
+            // 100% Success
+            player.linesCompiled += 4; 
+            inDarkWorld = !inDarkWorld;
+            player.velY = -JUMP_HEIGHT; 
+            player.dashFramesLeft = 0; 
+            const_cast<TerminalNode&>(*it).posX = -1000.0f; 
+            break; 
+        }
+    }
 
     // this is so that it dosent check collison multiple times from same collison
     static float Syntax_collison_cooldown = 0.0f;

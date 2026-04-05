@@ -7,6 +7,7 @@
 #include "ui_system.h"
 #include "leaderboard.h"
 #include "screens.h"
+#include "graph.h"
 #include <cmath>
 #include <raylib.h>
 #include <string>
@@ -20,6 +21,8 @@ Font vsFont = {0};
 Font codeFont = {0};
 Texture2D sideBarTex = {0};
 vector<FloatingText> FloatingTextSystem::popups;
+extern bool inDarkWorld;
+TeleportGraph teleportNetwork;
 
 struct Game
 {
@@ -64,6 +67,9 @@ struct Game
     std::vector<InstructionToast> activeToasts;
     int toastIndex = 0;
     float nextToastTime = 0.0f;
+    
+    float portalSpawnTimer = 0.0f;
+    float targetPortalSpawn = 0.0f;
 
     void Init()
     {
@@ -148,6 +154,8 @@ struct Game
 
         player.Rewind_time_left = REWIND_SECS;
         rewindSys.Reset();
+        teleportNetwork.Reset();
+        inDarkWorld = false;
 
         Tile::TotaltilesCreatedCount = 0;
         Tile::tilesLeft = 0;
@@ -175,6 +183,9 @@ struct Game
         // Onboarding toasts - sequential
         toastIndex = 0;
         nextToastTime = 0.5f; // Show first tip after 0.5 seconds
+        
+        portalSpawnTimer = 0.0f;
+        targetPortalSpawn = (float)GetRandomValue(5, 15);
     }
 
     void ChangeState(GameState newState)
@@ -360,6 +371,15 @@ struct Game
             bool isHigh = LeaderboardManager::GetInstance()->IsHighScore(finalScore);
             gameOverScreen->SetResults(finalScore, finalLines, finalTime, isHigh);
             gameOverScreen->SetStyle(GameOverScreen::Style::TERMINAL_ERROR);
+            
+            if (player.causeOfDeath == DeathCause::PORTAL_GAMBLE) {
+                gameOverScreen->SetErrorOverride("PORTAL GAMBLE FAILED", "You lost the 50/50 teleport risk.", "0xGAMBLEFAIL");
+            } else if (player.causeOfDeath == DeathCause::SYNTAX_ERROR) {
+                gameOverScreen->SetErrorOverride("SYNTAX ERROR: FATAL COLLISION", "Geometry collision caused a fatal exception.", "0xSYNTAXERR");
+            } else if (player.causeOfDeath == DeathCause::VOID_FALL) {
+                gameOverScreen->SetErrorOverride("VOID EXCEPTION", "Player fell below valid memory boundaries.", "0xVOID_FALL");
+            }
+            
             ChangeState(GAME_OVER);
             PauseMusicStream(gameMusic);
             return;
@@ -372,6 +392,21 @@ struct Game
 
         rewindSys.Record({player.posX, player.posY});
         updateTiles(scrollSpeed);
+        
+        portalSpawnTimer += dt;
+        if (targetPortalSpawn > 0 && portalSpawnTimer >= targetPortalSpawn) {
+            teleportNetwork.SpawnPair(GetScreenWidth() + 200, TILE_Y - 150, TILE_Y - 350);
+            portalSpawnTimer = 0.0f;
+            targetPortalSpawn = (float)GetRandomValue(5, 15); // Re-roll next portal spawn 
+        }
+        
+        teleportNetwork.Update(Tile::baseSpeed + scrollSpeed);
+        if (teleportNetwork.CleanUp(-100.0f)) {
+            // Re-roll portal spawn to within 5 seconds if missed
+            portalSpawnTimer = 0.0f;
+            targetPortalSpawn = (float)GetRandomValue(1, 5);
+        }
+        
         Pickups::SpawnIfNeeded(pickups, tiles);
         Pickups::UpdateAll(pickups, player, scrollSpeed, Tile::baseSpeed);
 
@@ -403,6 +438,15 @@ struct Game
             bool isHigh = LeaderboardManager::GetInstance()->IsHighScore(finalScore);
             gameOverScreen->SetResults(finalScore, finalLines, finalTime, isHigh);
             gameOverScreen->SetStyle(GameOverScreen::Style::TERMINAL_ERROR);
+            
+            if (player.causeOfDeath == DeathCause::PORTAL_GAMBLE) {
+                gameOverScreen->SetErrorOverride("PORTAL GAMBLE FAILED", "You lost the 50/50 teleport risk.", "0xGAMBLEFAIL");
+            } else if (player.causeOfDeath == DeathCause::SYNTAX_ERROR) {
+                gameOverScreen->SetErrorOverride("SYNTAX ERROR: FATAL COLLISION", "Geometry collision caused a fatal exception.", "0xSYNTAXERR");
+            } else if (player.causeOfDeath == DeathCause::VOID_FALL) {
+                gameOverScreen->SetErrorOverride("VOID EXCEPTION", "Player fell below valid memory boundaries.", "0xVOID_FALL");
+            }
+            
             ChangeState(GAME_OVER);
             PauseMusicStream(gameMusic);
         }
@@ -513,15 +557,20 @@ struct Game
 
     void Draw() {
         BeginDrawing();
-        ClearBackground(VSCodeTheme::BG_EDITOR);
+        ClearBackground(inDarkWorld ? DARKPURPLE : VSCodeTheme::BG_EDITOR);
         switch (state) {
             case PAUSED:
             case PLAYING:
                 DrawTiles();
+                teleportNetwork.Draw();
                 Pickups::DrawAll(pickups);
                 player.Draw();
                 UI::DrawVSCideBackground("main.cpp");
-                if (state == PLAYING) FloatingTextSystem::DrawAll();
+                
+                // Draw Dash Charges prominently
+                DrawVSText(TextFormat("Dashes: %i  (%.1fs Recharge)", player.dashCharges, 5.0f - player.timeSinceLastDashRecharge), 110, 85, 20, player.dashCharges > 0 ? VSCodeTheme::ACCENT_CYAN : VSCodeTheme::ACCENT_RED);
+
+                FloatingTextSystem::DrawAll();
                 DrawHUD();
                 if (state == PAUSED) uiManager->DrawCurrent();
                 break;
