@@ -29,7 +29,7 @@ struct TilePatternState {
 static TilePatternState patternState;
 
 static const std::vector<TilePatternSegment> phaseTemplates = {
-    {TilePatternPhase::NORMAL, 20, 0, 10, 90},
+    {TilePatternPhase::NORMAL, 28, 0, 10, 90},
     {TilePatternPhase::LOGICAL, 25, 0, 70, 30},
     {TilePatternPhase::MIXED, 40, 20, 50, 30},
     {TilePatternPhase::SYNTAX_SPIKE, 3, 70, 30, 0}

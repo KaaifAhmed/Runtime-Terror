@@ -245,28 +245,32 @@ struct Game
         UpdateInstructionToasts(dt);
 
         // Sequential onboarding toasts
-        if (toastIndex < 5 && nextToastTime > 0) {
+        if (toastIndex <= 5 && nextToastTime > 0) {
             nextToastTime -= dt;
             if (nextToastTime <= 0) {
                 switch (toastIndex) {
                     case 0:
-                        PushInstructionToast("Compilation Tip", {"Press SPACE to jump over null voids"}, 6.0f);
-                        nextToastTime = 6.5f;
+                        PushInstructionToast("Compilation Tip", {"Press SPACE to jump over null voids","Press ESC to pause compilation."}, 6.0f);
+                        nextToastTime = 5.0f;
                         break;
                     case 1:
                         PushInstructionToast("Compilation Tip", {"Hold CTRL+Z to rewind"}, 6.0f);
-                        nextToastTime = 6.5f;
+                        nextToastTime = 5.0f;
                         break;
                     case 2:
-                        PushInstructionToast("Compilation Tip", {"Compile normal code without errors"}, 6.0f);
-                        nextToastTime = 12.5f;
+                        PushInstructionToast("Compilation Tip", {"Collect memory tokens to make space for rewind.","Memory space is indicated by the white bar below."}, 6.0f);
+                        nextToastTime = 5.0f;
                         break;
                     case 3:
-                        PushInstructionToast("Compilation Tip", {"Blue codes are logical errors - jump quickly to avoid slowdown"}, 6.0f);
-                        nextToastTime = 12.5f;
+                        PushInstructionToast("Compilation Tip", {"Compile normal code without errors"}, 6.0f);
+                        nextToastTime = 5.5f;
                         break;
                     case 4:
-                        PushInstructionToast("Compilation Tip", {"Red codes are runtime errors - press R to rebound and survive"}, 6.0f);
+                        PushInstructionToast("Compilation Tip", {"Blue codes are logical errors.","Jump quickly to avoid slowdown"}, 6.0f);
+                        nextToastTime = 5.5f;
+                        break;
+                    case 5:
+                        PushInstructionToast("Compilation Tip", {"Red codes are runtime errors.","Press R to rebound and avoid crashing"}, 6.0f);
                         nextToastTime = 0.0f; // No more
                         break;
                 }
