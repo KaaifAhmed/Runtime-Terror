@@ -4,7 +4,7 @@
 #include <vector>
 #include <functional>
 
-enum class ScreenType { NONE, MAIN_MENU, PLAYING, PAUSED, GAME_OVER, LEADERBOARD, SETTINGS, CREDITS };
+enum class ScreenType { NONE, MAIN_MENU, PLAYING, PAUSED, GAME_OVER, LEADERBOARD, SETTINGS, CREDITS, HOW_TO_PLAY };
 
 // ============================================
 // MAIN MENU SCREEN
@@ -23,8 +23,8 @@ public:
     void Draw() override;
     void OnEnter() override;
     void OnExit() override;
-    void SetCallbacks(std::function<void()> onPlay, std::function<void()> onLeaderboard,
-                      std::function<void()> onCredits, std::function<void()> onExit);
+    void SetCallbacks(std::function<void()> onPlay, std::function<void()> onHowToPlay,
+                      std::function<void()> onLeaderboard, std::function<void()> onCredits, std::function<void()> onExit);
 };
 
 // ============================================
@@ -138,6 +138,22 @@ private:
 };
 
 // ============================================
+// HOW TO PLAY SCREEN
+// ============================================
+class HowToPlayScreen : public Screen {
+public:
+    HowToPlayScreen();
+    ~HowToPlayScreen();
+    void Update() override;
+    void Draw() override;
+    void OnEnter() override;
+    void OnExit() override;
+
+    std::function<void()> onBack;
+};
+
+
+// ============================================
 // UI SCREEN MANAGER
 // ============================================
 class UIScreenManager {
@@ -147,6 +163,7 @@ class UIScreenManager {
     GameOverScreen*    gameOverScreen;
     LeaderboardScreen* leaderboardScreen;
     CreditsScreen*     creditsScreen;
+    HowToPlayScreen*   howToPlayScreen;
     LeaderboardLinkedList* leaderboard;
 
 public:
@@ -165,6 +182,7 @@ public:
     GameOverScreen*    GetGameOverScreen()  { return gameOverScreen; }
     LeaderboardScreen* GetLeaderboardScreen() { return leaderboardScreen; }
     CreditsScreen*     GetCreditsScreen()   { return creditsScreen; }
+    HowToPlayScreen*   GetHowToPlayScreen() { return howToPlayScreen; }
     ScreenType         GetCurrentScreen() const  { return currentScreen; }
     ScreenType         GetPreviousScreen() const { return previousScreen; }
     LeaderboardLinkedList* GetLeaderboard() const { return leaderboard; }

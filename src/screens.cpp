@@ -11,16 +11,17 @@ static std::string savedPlayerName = "";
 // ============================================
 MainMenuScreen::MainMenuScreen()
     : logoY(100), logoPulse(0), selectedOption(0), animationTime(0) {
-    menuOptions = {"Start Debugging", "View Leaderboard", "Credits", "Exit"};
+    menuOptions = {"Start Debugging", "How to Play", "View Leaderboard", "Credits", "Exit"};
 }
 
 MainMenuScreen::~MainMenuScreen() {}
 
 void MainMenuScreen::SetCallbacks(std::function<void()> onPlay,
+                                  std::function<void()> onHowToPlay,
                                   std::function<void()> onLeaderboard,
                                   std::function<void()> onCredits,
                                   std::function<void()> onExit) {
-    callbacks = {onPlay, onLeaderboard, onCredits, onExit};
+    callbacks = {onPlay, onHowToPlay, onLeaderboard, onCredits, onExit};
 }
 
 void MainMenuScreen::OnEnter() { logoY = 80; selectedOption = 0; animationTime = 0; }
@@ -560,12 +561,64 @@ void CreditsScreen::DrawScrollingCredits() {
 }
 
 // ============================================
+// HOW TO PLAY SCREEN
+// ============================================
+HowToPlayScreen::HowToPlayScreen() {}
+HowToPlayScreen::~HowToPlayScreen() {}
+void HowToPlayScreen::OnEnter() {}
+void HowToPlayScreen::OnExit() {}
+
+void HowToPlayScreen::Update() {
+    if (IsKeyPressed(KEY_ESCAPE) || IsKeyPressed(KEY_BACKSPACE)) { 
+        if (onBack) onBack(); 
+    }
+}
+
+void HowToPlayScreen::Draw() {
+    ClearBackground(VSCodeTheme::BG_DARK);
+    UI::DrawVSCideBackground("how_to_play.md");
+
+    int centerX = GetScreenWidth() / 2;
+    int y = 100;
+    
+    DrawVSText("Controls", centerX - MeasureVSText("Controls", 36) / 2, y, 36, VSCodeTheme::ACCENT_CYAN);
+    y += 60;
+
+    int leftCol = centerX - 300;
+    int rightCol = centerX + 50;
+
+    auto DrawRule = [&](const char* key, const char* desc, Color color) {
+        DrawVSText(key, leftCol, y, 20, color);
+        DrawVSText(desc, rightCol, y, 20, VSCodeTheme::TEXT_NORMAL);
+        y += 40;
+    };
+
+    DrawRule("SPACE", "Jump / Double Jump", VSCodeTheme::ACCENT_GREEN);
+    DrawRule("CTRL + Z", "Rewind Time (Costs memory)", VSCodeTheme::ACCENT_YELLOW);
+    DrawRule("R", "Deflect from Red Tile (Bhop)", VSCodeTheme::ACCENT_RED);
+    DrawRule("SHIFT", "Dash forward (Recharges every 5s)", VSCodeTheme::ACCENT_BLUE);
+    DrawRule("ESC", "Pause / Back", VSCodeTheme::TEXT_MUTED);
+
+    y += 20;
+    DrawVSText("Mechanics", centerX - MeasureVSText("Mechanics", 36) / 2, y, 36, VSCodeTheme::ACCENT_CYAN);
+    y += 60;
+    
+    DrawRule("Grey Code:", "Normal paths. Build up your score.", VSCodeTheme::TEXT_MUTED);
+    DrawRule("Blue Code:", "Logical error! Slows down your computer.", VSCodeTheme::ACCENT_BLUE);
+    DrawRule("Red Code:", "Syntax error! Fatal crash on touch.", VSCodeTheme::ACCENT_RED);
+    DrawRule("Graph Portals:", "Teleports you to the dark world (+4 score).", VSCodeTheme::ACCENT_CYAN);
+    DrawRule("Dark World:", "Hardcore mode! Tiles become corrupted and scary.", {190, 0, 190, 255}); // Dark purple
+
+    DrawVSText("ESC to return", centerX - MeasureVSText("ESC to return", 14) / 2, GetScreenHeight() - 44, 14, VSCodeTheme::TEXT_MUTED);
+}
+
+// ============================================
 // UI SCREEN MANAGER
 // ============================================
 UIScreenManager::UIScreenManager()
     : currentScreen(ScreenType::NONE), previousScreen(ScreenType::NONE),
       mainMenu(nullptr), pauseScreen(nullptr), gameOverScreen(nullptr),
-      leaderboardScreen(nullptr), creditsScreen(nullptr), leaderboard(nullptr) {}
+      leaderboardScreen(nullptr), creditsScreen(nullptr), howToPlayScreen(nullptr), leaderboard(nullptr) {}
 
 UIScreenManager::~UIScreenManager() { Shutdown(); }
 
@@ -575,6 +628,7 @@ void UIScreenManager::Initialize() {
     gameOverScreen   = new GameOverScreen();
     leaderboardScreen = new LeaderboardScreen();
     creditsScreen    = new CreditsScreen();
+    howToPlayScreen  = new HowToPlayScreen();
 
     LeaderboardManager::GetInstance()->Initialize();
     leaderboard = LeaderboardManager::GetInstance()->GetLeaderboard();
@@ -583,12 +637,13 @@ void UIScreenManager::Initialize() {
 
 void UIScreenManager::Shutdown() {
     delete mainMenu; delete pauseScreen; delete gameOverScreen;
-    delete leaderboardScreen; delete creditsScreen;
+    delete leaderboardScreen; delete creditsScreen; delete howToPlayScreen;
     mainMenu         = nullptr;
     pauseScreen      = nullptr;
     gameOverScreen   = nullptr;
     leaderboardScreen = nullptr;
     creditsScreen    = nullptr;
+    howToPlayScreen  = nullptr;
     LeaderboardManager::GetInstance()->Shutdown();
 }
 
@@ -602,6 +657,7 @@ void UIScreenManager::SwitchTo(ScreenType screen) {
         else if (t == ScreenType::GAME_OVER && gameOverScreen)  (gameOverScreen->*fn)();
         else if (t == ScreenType::LEADERBOARD && leaderboardScreen) (leaderboardScreen->*fn)();
         else if (t == ScreenType::CREDITS && creditsScreen)     (creditsScreen->*fn)();
+        else if (t == ScreenType::HOW_TO_PLAY && howToPlayScreen) (howToPlayScreen->*fn)();
     };
     callOnScreen(previousScreen, &Screen::OnExit);
     callOnScreen(currentScreen,  &Screen::OnEnter);
@@ -616,6 +672,7 @@ void UIScreenManager::UpdateCurrent() {
         case ScreenType::GAME_OVER:   if (gameOverScreen)     gameOverScreen->Update();    break;
         case ScreenType::LEADERBOARD: if (leaderboardScreen)  leaderboardScreen->Update(); break;
         case ScreenType::CREDITS:     if (creditsScreen)      creditsScreen->Update();     break;
+        case ScreenType::HOW_TO_PLAY: if (howToPlayScreen)    howToPlayScreen->Update();   break;
         default: break;
     }
 }
@@ -627,6 +684,7 @@ void UIScreenManager::DrawCurrent() {
         case ScreenType::GAME_OVER:   if (gameOverScreen)     gameOverScreen->Draw();    break;
         case ScreenType::LEADERBOARD: if (leaderboardScreen)  leaderboardScreen->Draw(); break;
         case ScreenType::CREDITS:     if (creditsScreen)      creditsScreen->Draw();     break;
+        case ScreenType::HOW_TO_PLAY: if (howToPlayScreen)    howToPlayScreen->Draw();   break;
         default: break;
     }
 }

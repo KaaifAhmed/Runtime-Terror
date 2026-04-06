@@ -2,7 +2,7 @@
 #include <raylib.h>
 
 // GAME STATES
-enum GameState { MENU, PLAYING, PAUSED, GAME_OVER, LEADERBOARD, CREDITS };
+enum GameState { MENU, PLAYING, PAUSED, GAME_OVER, LEADERBOARD, CREDITS, HOW_TO_PLAY };
 
 // UI COLORS (Updated for VS Code Theme)
 const Color UI_PRIMARY = {30, 30, 30, 255};           // VS Code Editor BG

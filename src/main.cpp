@@ -37,6 +37,7 @@ struct Game
     GameOverScreen* gameOverScreen = nullptr;
     LeaderboardScreen* leaderboardScreen = nullptr;
     CreditsScreen* creditsScreen = nullptr;
+    HowToPlayScreen* howToPlayScreen = nullptr;
 
     Music gameMusic = {0};
     bool audioAvailable = false;
@@ -105,6 +106,7 @@ struct Game
         gameOverScreen = uiManager->GetGameOverScreen();
         leaderboardScreen = uiManager->GetLeaderboardScreen();
         creditsScreen = uiManager->GetCreditsScreen();
+        howToPlayScreen = uiManager->GetHowToPlayScreen();
 
         SetupUI();
         Reset();
@@ -118,6 +120,7 @@ struct Game
 
         mainMenu->SetCallbacks(
             [&]() { Reset(); ChangeState(PLAYING); },
+            [&]() { ChangeState(HOW_TO_PLAY); },
             [&]() { ChangeState(LEADERBOARD); },
             [&]() { ChangeState(CREDITS); },
             [&]() { shouldQuit = true; }
@@ -139,6 +142,7 @@ struct Game
         leaderboardScreen->onReset = [&]() { LeaderboardManager::GetInstance()->ResetLeaderboard(); leaderboardScreen->SetLeaderboard(LeaderboardManager::GetInstance()->GetLeaderboard()); };
         leaderboardScreen->onExport = [&]() { LeaderboardFileIO fileIO; fileIO.ExportToCSV(*LeaderboardManager::GetInstance()->GetLeaderboard(), "leaderboard.csv"); };
         creditsScreen->onBack = [&]() { ChangeState(MENU); };
+        if (howToPlayScreen) howToPlayScreen->onBack = [&]() { ChangeState(MENU); };
     }
 
     void Reset()
@@ -198,6 +202,7 @@ struct Game
             case GAME_OVER: uiManager->SwitchTo(ScreenType::GAME_OVER); break;
             case LEADERBOARD: uiManager->SwitchTo(ScreenType::LEADERBOARD); break;
             case CREDITS: uiManager->SwitchTo(ScreenType::CREDITS); break;
+            case HOW_TO_PLAY: uiManager->SwitchTo(ScreenType::HOW_TO_PLAY); break;
         }
     }
 
@@ -472,6 +477,7 @@ struct Game
             case MENU:
             case LEADERBOARD:
             case CREDITS:
+            case HOW_TO_PLAY:
             case GAME_OVER:
             case PAUSED:
                 uiManager->UpdateCurrent();

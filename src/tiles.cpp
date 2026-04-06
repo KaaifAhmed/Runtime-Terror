@@ -361,11 +361,29 @@ Tile::Tile(int startX)
     if (inDarkWorld && Tile::TotaltilesCreatedCount >= 10) {
         if (Tile::Chance(50)) tileType = TileType::SYNTAX;
         else if (Tile::Chance(20)) tileType = TileType::LOGICAL;
-    }
-    
-    // User Override: Force a red tile every 5 tiles globally!
-    if ((Tile::TotaltilesCreatedCount + 1) % 5 == 0) {
-        tileType = TileType::SYNTAX;
+    } else {
+        static Tile::TileType block[5];
+        static bool blockInitialized = false;
+        
+        int patternMod = Tile::TotaltilesCreatedCount % 5;
+        
+        // Pick non-adjacent indexes for red and blue
+        if (patternMod == 0 || !blockInitialized) {
+            int redIdx = GetRandomValue(0, 4);
+            int blueIdx = GetRandomValue(0, 4);
+            while (blueIdx == redIdx || abs(blueIdx - redIdx) <= 1) {
+                blueIdx = GetRandomValue(0, 4);
+            }
+            
+            for (int i = 0; i < 5; i++) {
+                if (i == redIdx) block[i] = TileType::SYNTAX;
+                else if (i == blueIdx) block[i] = TileType::LOGICAL;
+                else block[i] = TileType::NORMAL;
+            }
+            blockInitialized = true;
+        }
+        
+        tileType = block[patternMod];
     }
     
     snippetStartIndex = GetRandomValue(0, SNIPPET_COUNT - 1);
@@ -400,36 +418,65 @@ Tile::Tile(int startX, float tilewidth, TileType type)
 void Tile::Draw(TileType type)
 {
     Color bgColor = VS_BG;
+    Color topHighlight = {90, 90, 90, 180};
+    Color bottomShadow = {55, 55, 60, 200};
+    bool doStatic = false;
     
     if (inDarkWorld) {
         bgColor = Color{ 15, 0, 15, 255 }; // Deep dark purple base
-        if (type == TileType::SYNTAX) bgColor = Color{ 110, 0, 0, 255 }; // Menacing red
-        else if (type == TileType::LOGICAL) bgColor = Color{ 0, 0, 110, 255 }; // Menacing blue
+        if (type == TileType::SYNTAX) {
+            bgColor = Color{ 140, 0, 0, 255 }; // Harsher blood red
+            topHighlight = {255, 50, 50, 255}; // Glowing hot red
+            bottomShadow = {100, 0, 0, 200};
+            doStatic = true;
+        }
+        else if (type == TileType::LOGICAL) {
+            bgColor = Color{ 0, 40, 120, 255 }; // Haunting dark blue
+            topHighlight = {50, 255, 255, 255}; // Ghostly cyan glow
+            bottomShadow = {0, 0, 80, 200};
+            doStatic = true;
+        }
     } else {
-        if (type == TileType::SYNTAX)
-            bgColor = { 79, 17, 21, 255 }; // #4F1115 Dark Red Highlight
-        else if (type == TileType::LOGICAL)
-            bgColor = { 26, 64, 93, 255 }; // #1A405D Dark Blue Highlight
+        if (type == TileType::SYNTAX) {
+            bgColor = { 79, 17, 21, 255 }; // Dark Red Highlight
+            topHighlight = {200, 60, 60, 160};
+        } else if (type == TileType::LOGICAL) {
+            bgColor = { 0, 90, 160, 255 }; // Distinct Blue Highlight
+            topHighlight = {60, 130, 200, 160};
+        }
     }
 
     DrawRectangle(tileX, tileY, tileWidth, tileHeight, bgColor);
 
+    // Scary animated static lines
+    if (doStatic) {
+        int alpha = GetRandomValue(20, 80);
+        Color staticColor = (type == TileType::SYNTAX) ? 
+            Color{255, 0, 0, (unsigned char)alpha} : 
+            Color{0, 255, 255, (unsigned char)alpha};
+        
+        for(int k = 0; k < 3; k++) {
+            float lineY = tileY + GetRandomValue(2, tileHeight - 2);
+            DrawRectangle(tileX, lineY, tileWidth, GetRandomValue(1, 4), staticColor);
+        }
+    }
+
     // Subtle top highlight line ("lit edge" feel)
-    Color topHighlight = {90, 90, 90, 180};
-    if (type == TileType::SYNTAX)
-        topHighlight = {200, 60, 60, 160};  // Red edge for syntax errors
-    else if (type == TileType::LOGICAL)
-        topHighlight = {60, 130, 200, 160}; // Blue edge for logical errors
     DrawRectangle(tileX, tileY, tileWidth, 2, topHighlight);
 
     // Subtle bottom border (separates from void below)
-    DrawRectangle(tileX, tileY + tileHeight - 1, tileWidth, 1, {55, 55, 60, 200});
+    DrawRectangle(tileX, tileY + tileHeight - 1, tileWidth, 1, bottomShadow);
 
     const int fontSize = 24;
     const int padding = 6;
 
     const char *snippet = cppSnippets[snippetStartIndex % SNIPPET_COUNT];
     Color textColor = GetSnippetColor(snippet);
+    
+    // Scary text glitch effect
+    if (doStatic && GetRandomValue(1, 100) > 85) {
+        textColor = (type == TileType::SYNTAX) ? RED : Color{0, 255, 255, 255};
+    }
 
     // Vertically center the text
     int textY = (int)tileY + (tileHeight - fontSize) / 2;
@@ -515,7 +562,7 @@ void Tile::New_tiles(std::vector<Tile *> &tiles)
         if (!tiles.empty())
         {
             if (tiles.back()->tileType == TileType::SYNTAX)
-                gap = 0;
+                gap = GetRandomValue(100, 150);
             else if (tiles.back()->tileType == TileType::LOGICAL)
                 gap = GetRandomValue(40, 60);
         }
@@ -667,7 +714,9 @@ void Tile::Collision(Player &player, const std::vector<Tile *> &tiles)
 
     if (landedOnLogical)
         SmoothCountdown(baseSpeed, TILE_SPEED);
-    if (baseSpeed == 0) player.isGameOver = true;
+    if (baseSpeed <= 0.0f) {
+        player.isGameOver = true;
+    }
 }
 
 void Tile::CleanupTiles(std::vector<Tile *> &tiles)

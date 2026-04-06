@@ -16,32 +16,43 @@ An infinite runner inside a VS Code editor. You play as the Cursor trying to exe
 
 ### Using Make (Recommended)
 ```powershell
-cd c:\github-repos\Runtime-Terror
+cd c:\Users\maaz_\Desktop\Runtime-Terror
 C:\raylib\w64devkit\bin\mingw32-make.exe clean
 C:\raylib\w64devkit\bin\mingw32-make.exe
 ```
 
 ### Manual Compile (Alternative)
 ```powershell
-cd c:\github-repos\Runtime-Terror\src
+cd c:\Users\maaz_\Desktop\Runtime-Terror\src
 C:\raylib\w64devkit\bin\g++.exe -o ../game.exe main.cpp ui_system.cpp leaderboard.cpp screens.cpp screens_part2.cpp screens_part3.cpp player.cpp tiles.cpp pickup.cpp -std=c++14 -I. -IC:/raylib/src -LC:/raylib/src -lraylib -lopengl32 -lgdi32 -lwinmm
 ```
 
 ## Run Command
 
 ```powershell
-cd c:\github-repos\Runtime-Terror
+cd c:\Users\maaz_\Desktop\Runtime-Terror
 .\game.exe
 ```
 
-## Game Controls
+## How to Play & Controls
+
+In **Runtime Terror**, you play as the Cursor trying to execute code while avoiding Errors. The code structure generation ensures a fast-paced environment where logic and syntax bugs must be avoided.
 
 | Key | Action |
 |-----|--------|
-| **SPACE** | Jump / Double Jump |
-| **CTRL + Z** | Rewind time (5 seconds max) |
-| **ESC** | Pause game |
+| **SPACE** | Jump / Double Jump to avoid void and errors. |
+| **CTRL + Z** | Rewind time (5 seconds max). Costs memory. |
+| **R** | Activate Bhop buffer right before landing on a Red Tile (Syntax Error) to deflect off it. |
+| **LEFT SHIFT** | Dash forward. Recharges 1 dash charge every 5 seconds. |
+| **ESC** | Pause game / Back |
 | **H** | Show hitboxes (debug) |
+
+### Features & Errors
+- **Compile Normal Code:** Normal tiles you can safely step on.
+- **Logical Errors (Blue):** These lag your computer. Jump quickly to avoid slowing down completely.
+- **Syntax Errors (Red):** Touching the top guarantees a Game Over, unless you press **R** right before landing to bounce off!
+- **Graph Portals:** Touch these to successfully compile code (+4 lines) and swap back and forth from the dark world.
+- **The Dark World:** An alternate hardcore dimension triggered by Graph Portals. Code tiles become corrupted with violent static, menacing border glows, and text glitches!
 
 ## UI Features
 
