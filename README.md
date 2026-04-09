@@ -1,96 +1,79 @@
 # Runtime Terror
-An infinite runner inside a VS Code editor. You play as the Cursor trying to execute code while avoiding Bugs and Stack Overflow errors. The main mechanic is 'Ctrl+Z', which lets you rewind time using a Circular Buffer data structure. Now features a polished VS Code dark theme UI system with Main Menu, Pause Screen, Game Over screen, and Leaderboard.
+Runtime Terror is a Windows-native infinite runner built in C++ using [Raylib](https://www.raylib.com/). Players control a Cursor navigating a stylized VS Code-inspired environment, avoiding Bugs, Stack Overflow errors, and corrupted code tiles while using a rewind mechanic to recover from mistakes.
+
+## Project Overview
+- Genre: Infinite runner
+- Engine: Raylib
+- Language: C++ (C++14)
+- Platform: Windows
+- Development environment: VS Code
+
+## Key Features
+- Player character is the Cursor, racing through code-themed obstacles
+- Rewind mechanic via **Ctrl+Z**, implemented with a circular buffer for time restoration
+- Distinct hazard types: normal code, logical errors, syntax errors, and corrupted dark world tiles
+- Polished UI system with Main Menu, Pause Screen, Game Over screen, and Leaderboard
+- Smooth input handling, keyboard navigation, and custom game state management
 
 ## Prerequisites
-
-1. **Download Raylib** from https://raysan5.itch.io/raylib/purchase?popup=1 (free, just enter $0)
-2. **Extract** to `C:\raylib\` (must be this exact path)
-3. **Verify** the structure:
-   ```
+1. Install Raylib for Windows
+   - Download from https://raysan5.itch.io/raylib/purchase?popup=1
+   - Raylib is free; enter `$0` when prompted
+2. Extract Raylib to `C:\raylib\`
+3. Confirm the directory structure:
+   ```text
    C:\raylib\
    ├── w64devkit\bin\      (contains g++.exe, mingw32-make.exe)
    └── src\                 (raylib headers and library)
    ```
 
-## Build Commands
+## Build Instructions
+### Recommended: Use VS Code build tasks
+This repository includes VS Code tasks for debug and release builds using the installed MinGW toolchain.
 
-### Using Make (Recommended)
+### Manual build
+From the repository root:
 ```powershell
-cd c:\Users\maaz_\Desktop\Runtime-Terror
-C:\raylib\w64devkit\bin\mingw32-make.exe clean
-C:\raylib\w64devkit\bin\mingw32-make.exe
+cd C:\Users\kaaif\Documents\Github\Runtime-Terror
+C:\raylib\w64devkit\bin\g++.exe -std=c++14 -g -I C:/raylib/raylib/src src/*.cpp -L C:/raylib/raylib/src -lraylib -lopengl32 -lgdi32 -lwinmm -luser32 -o main.exe
 ```
 
-### Manual Compile (Alternative)
+## Run the Game
+From the repository root:
 ```powershell
-cd c:\Users\maaz_\Desktop\Runtime-Terror\src
-C:\raylib\w64devkit\bin\g++.exe -o ../game.exe main.cpp ui_system.cpp leaderboard.cpp screens.cpp screens_part2.cpp screens_part3.cpp player.cpp tiles.cpp pickup.cpp -std=c++14 -I. -IC:/raylib/src -LC:/raylib/src -lraylib -lopengl32 -lgdi32 -lwinmm
+cd C:\Users\kaaif\Documents\Github\Runtime-Terror
+.\main.exe
 ```
 
-## Run Command
-
-```powershell
-cd c:\Users\maaz_\Desktop\Runtime-Terror
-.\game.exe
-```
-
-## How to Play & Controls
-
-In **Runtime Terror**, you play as the Cursor trying to execute code while avoiding Errors. The code structure generation ensures a fast-paced environment where logic and syntax bugs must be avoided.
-
+## Controls
 | Key | Action |
 |-----|--------|
-| **SPACE** | Jump / Double Jump to avoid void and errors. |
-| **CTRL + Z** | Rewind time (5 seconds max). Costs memory. |
-| **R** | Activate Bhop buffer right before landing on a Red Tile (Syntax Error) to deflect off it. |
-| **LEFT SHIFT** | Dash forward. Recharges 1 dash charge every 5 seconds. |
-| **ESC** | Pause game / Back |
-| **H** | Show hitboxes (debug) |
+| `SPACE` | Jump / double jump |
+| `CTRL + Z` | Rewind time for up to 5 seconds |
+| `R` | Use Bhop buffer to deflect off syntax error tiles |
+| `LEFT SHIFT` | Dash forward (recharges over time) |
+| `ESC` | Pause / back |
+| `H` | Toggle hitbox debug view |
 
-### Features & Errors
-- **Compile Normal Code:** Normal tiles you can safely step on.
-- **Logical Errors (Blue):** These lag your computer. Jump quickly to avoid slowing down completely.
-- **Syntax Errors (Red):** Touching the top guarantees a Game Over, unless you press **R** right before landing to bounce off!
-- **Graph Portals:** Touch these to successfully compile code (+4 lines) and swap back and forth from the dark world.
-- **The Dark World:** An alternate hardcore dimension triggered by Graph Portals. Code tiles become corrupted with violent static, menacing border glows, and text glitches!
+## Gameplay Mechanics
+- **Normal tiles** represent safe code execution paths.
+- **Logical errors** slow the player and require precise timing.
+- **Syntax errors** are lethal unless deflected with the `R` buffer.
+- **Graph portals** transition the player into an alternate dark world and reward successful progress.
+- **Dark World** tiles are more dangerous and visually corrupted for a high-intensity challenge.
 
-## UI Features
+## Project Structure
+- `src/` — game source code and headers
+- `src/main.cpp` — application entry point
+- `src/player.cpp`, `player.h` — player movement and abilities
+- `src/tiles.cpp`, `tiles.h` — tile generation and obstacle behavior
+- `src/ui_system.cpp`, `ui_system.h` — menu and HUD rendering
+- `src/leaderboard.cpp`, `leaderboard.h` — scoring and persistent leaderboard
+- `src/screens.cpp`, `screens.h` — menu, pause, and game over screens
 
-### Main Menu
-- Animated gradient background with subtle grid effects
-- Pulsing logo with glow effect and blinking cursor
-- Smooth button hover animations with cyan accent bars
-- Keyboard navigation (UP/DOWN/ENTER) + mouse support
+## Notes
+- The codebase is designed to be edited and rebuilt from within VS Code.
+- The game currently targets Windows and Raylib's MinGW toolchain.
 
-### Pause Screen
-- Clean dark overlay with fade-in animation
-- Cyan accent color theme
-- Simple menu: Resume, Restart, Main Menu, Quit
-- ESC to resume
-
-### Game Over Screen
-- Clean terminal-style display
-- Score and stats shown clearly
-- Space to restart, M for menu, Q to quit
-- Smart name input: default "Player" name, ESC to skip
-
-### Leaderboard
-- Linked list with insertion sort for top 10 scores
-- Saves to file automatically
-- E to export CSV, R to reset
-
-## Troubleshooting
-
-- **"mingw32-make not recognized"**: Use full path `C:\raylib\w64devkit\bin\mingw32-make.exe`
-- **"Permission denied"**: Close the game first with `taskkill /f /im game.exe`
-- **"raylib.h not found"**: Check `C:\raylib\` exists with correct structure
-- **Audio warnings**: Game works without audio - these are just warnings
-- **Window closes immediately**: Check `C:\raylib\w64devkit\bin\` is in your PATH or use full paths
-
-## VS Code Workspace
-
-Open `main.code-workspace` in VS Code for easy editing and building.
-
-## Credits
-
-Made with [Raylib](https://www.raylib.com/) - A simple and easy-to-use library to enjoy videogames programming.
+## License
+This repository does not currently specify a license. Add a `LICENSE` file if you wish to permit reuse or distribution.

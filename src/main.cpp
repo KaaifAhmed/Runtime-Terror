@@ -7,7 +7,6 @@
 #include "ui_system.h"
 #include "leaderboard.h"
 #include "screens.h"
-#include "graph.h"
 #include <cmath>
 #include <raylib.h>
 #include <string>
@@ -21,8 +20,6 @@ Font vsFont = {0};
 Font codeFont = {0};
 Texture2D sideBarTex = {0};
 vector<FloatingText> FloatingTextSystem::popups;
-extern bool inDarkWorld;
-TeleportGraph teleportNetwork;
 
 struct Game
 {
@@ -68,9 +65,6 @@ struct Game
     std::vector<InstructionToast> activeToasts;
     int toastIndex = 0;
     float nextToastTime = 0.0f;
-    
-    float portalSpawnTimer = 0.0f;
-    float targetPortalSpawn = 0.0f;
 
     void Init()
     {
@@ -85,7 +79,7 @@ struct Game
         SetTextureFilter(vsFont.texture, TEXTURE_FILTER_BILINEAR);
         codeFont = LoadFontEx("C:\\Windows\\Fonts\\consola.ttf", 48, 0, 256);
         SetTextureFilter(codeFont.texture, TEXTURE_FILTER_BILINEAR);
-        sideBarTex = LoadTexture("src\\side-bar.png");
+        sideBarTex = LoadTexture("assets/images/side-bar.png");
         SetTextureFilter(sideBarTex, TEXTURE_FILTER_BILINEAR);
 
         player.Init();
@@ -94,7 +88,7 @@ struct Game
         Tile::ResetPatternState();
 
         if (audioAvailable) {
-            gameMusic = LoadMusicStream("src\\game_music.mp3");
+            gameMusic = LoadMusicStream("assets/audio/game_music.mp3");
             if (gameMusic.frameCount > 0) SetMusicVolume(gameMusic, 0.7f);
         }
 
@@ -158,8 +152,6 @@ struct Game
 
         player.Rewind_time_left = REWIND_SECS;
         rewindSys.Reset();
-        teleportNetwork.Reset();
-        inDarkWorld = false;
 
         Tile::TotaltilesCreatedCount = 0;
         Tile::tilesLeft = 0;
@@ -187,9 +179,6 @@ struct Game
         // Onboarding toasts - sequential
         toastIndex = 0;
         nextToastTime = 0.5f; // Show first tip after 0.5 seconds
-        
-        portalSpawnTimer = 0.0f;
-        targetPortalSpawn = (float)GetRandomValue(5, 15);
     }
 
     void ChangeState(GameState newState)
@@ -261,32 +250,20 @@ struct Game
         UpdateInstructionToasts(dt);
 
         // Sequential onboarding toasts
-        if (toastIndex <= 5 && nextToastTime > 0) {
+        if (toastIndex <= 2 && nextToastTime > 0) {
             nextToastTime -= dt;
             if (nextToastTime <= 0) {
                 switch (toastIndex) {
                     case 0:
-                        PushInstructionToast("Compilation Tip", {"Press SPACE to jump over null voids","Press ESC to pause compilation."}, 6.0f);
-                        nextToastTime = 5.0f;
+                        PushInstructionToast("Welcome", {"Press SPACE to jump", "Press ESC to pause"}, 4.0f);
+                        nextToastTime = 4.0f;
                         break;
                     case 1:
-                        PushInstructionToast("Compilation Tip", {"Hold CTRL+Z to rewind"}, 6.0f);
-                        nextToastTime = 5.0f;
+                        PushInstructionToast("Controls", {"Hold CTRL+Z to rewind time", "Collect memory tokens for rewind power"}, 4.0f);
+                        nextToastTime = 4.0f;
                         break;
                     case 2:
-                        PushInstructionToast("Compilation Tip", {"Collect memory tokens to make space for rewind.","Memory space is indicated by the white bar below."}, 6.0f);
-                        nextToastTime = 5.0f;
-                        break;
-                    case 3:
-                        PushInstructionToast("Compilation Tip", {"Compile normal code without errors"}, 6.0f);
-                        nextToastTime = 5.5f;
-                        break;
-                    case 4:
-                        PushInstructionToast("Compilation Tip", {"Blue codes are logical errors.","Jump quickly to avoid slowdown"}, 6.0f);
-                        nextToastTime = 5.5f;
-                        break;
-                    case 5:
-                        PushInstructionToast("Compilation Tip", {"Red codes are runtime errors.","Press R to rebound and avoid crashing"}, 6.0f);
+                        PushInstructionToast("Gameplay", {"Avoid red errors, jump over blue ones", "Press R to rebound from crashes"}, 4.0f);
                         nextToastTime = 0.0f; // No more
                         break;
                 }
@@ -297,23 +274,11 @@ struct Game
         if (Tile::phaseChanged) {
             Tile::phaseChanged = false;
             if (Tile::currentPhase == TilePatternPhase::LOGICAL) {
-                PushInstructionToast("Logical Error Phase", {
-                    "Entering logical error codes",
-                    "Blue codes lag your computer - jump quickly",
-                    "Avoid staying too long or crash"
-                }, 6.0f);
+                PushInstructionToast("Phase Change", {"Logical errors ahead - jump quickly!"}, 3.0f);
             } else if (Tile::currentPhase == TilePatternPhase::MIXED) {
-                PushInstructionToast("Mixed Error Phase", {
-                    "Normal and erroneous codes mixed",
-                    "Watch for logical and runtime errors",
-                    "Use R to rebound from red codes"
-                }, 6.0f);
+                PushInstructionToast("Phase Change", {"Mixed errors - stay alert!"}, 3.0f);
             } else if (Tile::currentPhase == TilePatternPhase::SYNTAX_SPIKE) {
-                PushInstructionToast("Runtime Error Spike", {
-                    "Runtime error spike incoming",
-                    "Red tiles ahead - press R to rebound",
-                    "Stay ready for fast error handling"
-                }, 6.0f);
+                PushInstructionToast("Warning", {"Runtime error spike - use R to rebound!"}, 3.0f);
             }
         }
 
@@ -397,20 +362,6 @@ struct Game
 
         rewindSys.Record({player.posX, player.posY});
         updateTiles(scrollSpeed);
-        
-        portalSpawnTimer += dt;
-        if (targetPortalSpawn > 0 && portalSpawnTimer >= targetPortalSpawn) {
-            teleportNetwork.SpawnPair(GetScreenWidth() + 200, TILE_Y - 150, TILE_Y - 350);
-            portalSpawnTimer = 0.0f;
-            targetPortalSpawn = (float)GetRandomValue(5, 15); // Re-roll next portal spawn 
-        }
-        
-        teleportNetwork.Update(Tile::baseSpeed + scrollSpeed);
-        if (teleportNetwork.CleanUp(-100.0f)) {
-            // Re-roll portal spawn to within 5 seconds if missed
-            portalSpawnTimer = 0.0f;
-            targetPortalSpawn = (float)GetRandomValue(1, 5);
-        }
         
         Pickups::SpawnIfNeeded(pickups, tiles);
         Pickups::UpdateAll(pickups, player, scrollSpeed, Tile::baseSpeed);
@@ -514,7 +465,7 @@ struct Game
                       player.isRewinding ? VSCodeTheme::ACCENT_ORANGE : VSCodeTheme::STATUS_BG);
 
         char leftText[256];
-        sprintf(leftText, "  >< Runtime-Terror  |  0 Errors  0 Warnings  |  Ln %d, Col %d", currentLn, currentCol);
+        sprintf(leftText, "  >< Runtime-Terror  |  0 Errors  0 Warnings  |  Ln %d, Col %d  |  Dashes: %d", currentLn, currentCol, player.dashCharges);
         DrawVSText(leftText, 10, barY + 9, 14, WHITE);
 
         int minutes = (int)(gameTimer / 60), seconds = (int)gameTimer % 60;
@@ -563,19 +514,15 @@ struct Game
 
     void Draw() {
         BeginDrawing();
-        ClearBackground(inDarkWorld ? DARKPURPLE : VSCodeTheme::BG_EDITOR);
+        ClearBackground(VSCodeTheme::BG_EDITOR);
         switch (state) {
             case PAUSED:
             case PLAYING:
                 DrawTiles();
-                teleportNetwork.Draw();
                 Pickups::DrawAll(pickups);
                 player.Draw();
                 UI::DrawVSCideBackground("main.cpp");
                 
-                // Draw Dash Charges prominently
-                DrawVSText(TextFormat("Dashes: %i  (%.1fs Recharge)", player.dashCharges, 5.0f - player.timeSinceLastDashRecharge), 110, 85, 20, player.dashCharges > 0 ? VSCodeTheme::ACCENT_CYAN : VSCodeTheme::ACCENT_RED);
-
                 FloatingTextSystem::DrawAll();
                 DrawHUD();
                 if (state == PAUSED) uiManager->DrawCurrent();
@@ -606,6 +553,7 @@ struct Game
 
 int main()
 {
+    SetConfigFlags(FLAG_FULLSCREEN_MODE);
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Runtime Terror");
     if (!IsWindowReady()) return 1;
 

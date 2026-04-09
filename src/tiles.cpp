@@ -3,11 +3,7 @@
 #include <string>
 #include <iostream>
 #include <deque>
-#include "graph.h"
 using namespace std;
-
-extern TeleportGraph teleportNetwork;
-bool inDarkWorld = false;
 
 int Tile::TotaltilesCreatedCount = 0;
 int Tile::tilesLeft = 0;
@@ -358,40 +354,12 @@ Tile::Tile(int startX)
 {
     tileType = GetNextPatternTileType();
     
-    if (inDarkWorld && Tile::TotaltilesCreatedCount >= 10) {
-        if (Tile::Chance(50)) tileType = TileType::SYNTAX;
-        else if (Tile::Chance(20)) tileType = TileType::LOGICAL;
-    } else {
-        static Tile::TileType block[5];
-        static bool blockInitialized = false;
-        
-        int patternMod = Tile::TotaltilesCreatedCount % 5;
-        
-        // Pick non-adjacent indexes for red and blue
-        if (patternMod == 0 || !blockInitialized) {
-            int redIdx = GetRandomValue(0, 4);
-            int blueIdx = GetRandomValue(0, 4);
-            while (blueIdx == redIdx || abs(blueIdx - redIdx) <= 1) {
-                blueIdx = GetRandomValue(0, 4);
-            }
-            
-            for (int i = 0; i < 5; i++) {
-                if (i == redIdx) block[i] = TileType::SYNTAX;
-                else if (i == blueIdx) block[i] = TileType::LOGICAL;
-                else block[i] = TileType::NORMAL;
-            }
-            blockInitialized = true;
-        }
-        
-        tileType = block[patternMod];
-    }
-    
     snippetStartIndex = GetRandomValue(0, SNIPPET_COUNT - 1);
 
     const int fontSize = 24;
     const int padding = 6;
     const char *snippet = cppSnippets[snippetStartIndex % SNIPPET_COUNT];
-    int textWidth = MeasureCodeText(snippet, fontSize);
+   int textWidth = MeasureCodeText(snippet, fontSize);
     tileWidth = (textWidth * 1.1f) + padding * 2 + 20;
 
     tileX = startX;
@@ -420,46 +388,16 @@ void Tile::Draw(TileType type)
     Color bgColor = VS_BG;
     Color topHighlight = {90, 90, 90, 180};
     Color bottomShadow = {55, 55, 60, 200};
-    bool doStatic = false;
     
-    if (inDarkWorld) {
-        bgColor = Color{ 15, 0, 15, 255 }; // Deep dark purple base
-        if (type == TileType::SYNTAX) {
-            bgColor = Color{ 140, 0, 0, 255 }; // Harsher blood red
-            topHighlight = {255, 50, 50, 255}; // Glowing hot red
-            bottomShadow = {100, 0, 0, 200};
-            doStatic = true;
-        }
-        else if (type == TileType::LOGICAL) {
-            bgColor = Color{ 0, 40, 120, 255 }; // Haunting dark blue
-            topHighlight = {50, 255, 255, 255}; // Ghostly cyan glow
-            bottomShadow = {0, 0, 80, 200};
-            doStatic = true;
-        }
-    } else {
-        if (type == TileType::SYNTAX) {
-            bgColor = { 79, 17, 21, 255 }; // Dark Red Highlight
-            topHighlight = {200, 60, 60, 160};
-        } else if (type == TileType::LOGICAL) {
-            bgColor = { 0, 90, 160, 255 }; // Distinct Blue Highlight
-            topHighlight = {60, 130, 200, 160};
-        }
+    if (type == TileType::SYNTAX) {
+        bgColor = { 79, 17, 21, 255 }; // Dark Red Highlight
+        topHighlight = {200, 60, 60, 160};
+    } else if (type == TileType::LOGICAL) {
+        bgColor = { 0, 90, 160, 255 }; // Distinct Blue Highlight
+        topHighlight = {60, 130, 200, 160};
     }
 
     DrawRectangle(tileX, tileY, tileWidth, tileHeight, bgColor);
-
-    // Scary animated static lines
-    if (doStatic) {
-        int alpha = GetRandomValue(20, 80);
-        Color staticColor = (type == TileType::SYNTAX) ? 
-            Color{255, 0, 0, (unsigned char)alpha} : 
-            Color{0, 255, 255, (unsigned char)alpha};
-        
-        for(int k = 0; k < 3; k++) {
-            float lineY = tileY + GetRandomValue(2, tileHeight - 2);
-            DrawRectangle(tileX, lineY, tileWidth, GetRandomValue(1, 4), staticColor);
-        }
-    }
 
     // Subtle top highlight line ("lit edge" feel)
     DrawRectangle(tileX, tileY, tileWidth, 2, topHighlight);
@@ -472,11 +410,6 @@ void Tile::Draw(TileType type)
 
     const char *snippet = cppSnippets[snippetStartIndex % SNIPPET_COUNT];
     Color textColor = GetSnippetColor(snippet);
-    
-    // Scary text glitch effect
-    if (doStatic && GetRandomValue(1, 100) > 85) {
-        textColor = (type == TileType::SYNTAX) ? RED : Color{0, 255, 255, 255};
-    }
 
     // Vertically center the text
     int textY = (int)tileY + (tileHeight - fontSize) / 2;
@@ -562,7 +495,7 @@ void Tile::New_tiles(std::vector<Tile *> &tiles)
         if (!tiles.empty())
         {
             if (tiles.back()->tileType == TileType::SYNTAX)
-                gap = GetRandomValue(100, 150);
+                gap = 0;
             else if (tiles.back()->tileType == TileType::LOGICAL)
                 gap = GetRandomValue(40, 60);
         }
@@ -585,22 +518,6 @@ void Tile::Collision(Player &player, const std::vector<Tile *> &tiles)
     bool landedOnNormal = false;
     bool landedOnLogical = false;
     int playerRightEdge = player.posX + player.playerWidth;
-
-    // Check Graph Teleportation first
-    for (auto it = teleportNetwork.GetNodes().begin(); it != teleportNetwork.GetNodes().end(); ++it) {
-        Rectangle nodeRect = {it->posX, it->posY, it->width, it->height};
-        if (CheckCollisionRecs(player.GetCollisionRect(), nodeRect) || 
-            CheckCollisionRecs(player.GetNonCollisionRect(), nodeRect)) {
-            
-            // 100% Success
-            player.linesCompiled += 4; 
-            inDarkWorld = !inDarkWorld;
-            player.velY = -JUMP_HEIGHT; 
-            player.dashFramesLeft = 0; 
-            const_cast<TerminalNode&>(*it).posX = -1000.0f; 
-            break; 
-        }
-    }
 
     // this is so that it dosent check collison multiple times from same collison
     static float Syntax_collison_cooldown = 0.0f;
@@ -742,9 +659,9 @@ void Tile::SmoothCountdown(float &value, float startValue) {
 }
 
 void Tile::Init() {
-    redTileCollisonSound = LoadSound("sounds\\red_tile_death_sound.wav");
+    redTileCollisonSound = LoadSound("assets/audio/red_tile_death_sound.wav");
     SetSoundVolume(redTileCollisonSound, redTileCollisonSoundVolumn);
-    LogicalTileCollisonSound = LoadSound("sounds\\logical_tile_sound2.mp3");
+    LogicalTileCollisonSound = LoadSound("assets/audio/logical_tile_sound2.mp3");
     SetSoundVolume(LogicalTileCollisonSound, LogicalTileCollisonSoundVolumn);
 }
 

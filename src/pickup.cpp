@@ -21,7 +21,7 @@ void Pickup::Update(float scrollSpeed, float baseSpeed)
 // Call this after InitAudioDevice()
 void Pickup::Init()
 {
-    collectingSound = LoadSound("sounds\\powerUp.wav");
+    collectingSound = LoadSound("assets/audio/powerUp.wav");
     SetSoundVolume(collectingSound,collectingSoundvolumn);
 }
 

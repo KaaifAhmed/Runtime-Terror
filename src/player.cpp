@@ -11,13 +11,13 @@ float Player::rewindSoundVolumn = 0.5f;
 float Player::fallingDownSoundVolumn = 1.0f;
 // Call this after InitAudioDevice()
 void Player::Init() {
-  jumpSound = LoadSound("sounds\\jump.wav");
+  jumpSound = LoadSound("assets/audio/jump.wav");
   SetSoundVolume(jumpSound, jumpSoundVolumn);
 
-  rewindSound = LoadSound("sounds\\Time_rewind_sound.mp3");
+  rewindSound = LoadSound("assets/audio/Time_rewind_sound.mp3");
   SetSoundVolume(rewindSound, rewindSoundVolumn);
 
-  fallingDownSound = LoadSound("sounds\\falling_down_sound2.mp3");
+  fallingDownSound = LoadSound("assets/audio/falling_down_sound2.mp3");
   SetSoundVolume(fallingDownSound, fallingDownSoundVolumn);
 }
 

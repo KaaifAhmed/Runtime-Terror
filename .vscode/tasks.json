@@ -41,6 +41,8 @@
             "args": [
                 "-std=c++14",
                 "-O2",
+                "-s",
+                "-mwindows",
                 "-I",
                 "C:/raylib/raylib/src",
                 "src/*.cpp",
@@ -52,7 +54,7 @@
                 "-lwinmm",
                 "-luser32",
                 "-o",
-                "main.exe"
+                "RuntimeTerror.exe"
             ],
             "options": {
                 "cwd": "${workspaceFolder}"
